@@ -159,6 +159,7 @@ fun SettingsScreen(
     val isScanningWifi by viewModel.isScanningWifi.collectAsStateWithLifecycle()
     val wifiNetworks by viewModel.wifiNetworks.collectAsStateWithLifecycle()
     val showWifiScanDialog by viewModel.showWifiScanDialog.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     // Form states
     var connMode by remember(config) { mutableIntStateOf(config?.connMode ?: 0) }
@@ -252,7 +253,7 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             // ── Device Mode ──
-            SectionHeader(title = "Device Protection Mode")
+            SectionHeader(title = stringResource(R.string.settings_device_protection_mode))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -290,13 +291,13 @@ fun SettingsScreen(
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
-                                text = "PUMP MODE",
+                                text = stringResource(R.string.settings_pump_mode),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                         Text(
-                            text = "Smart Protection Enabled",
+                            text = stringResource(R.string.settings_smart_protection_enabled),
                             style = MaterialTheme.typography.labelSmall,
                             color = if (pumpMode) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                         )
@@ -334,13 +335,13 @@ fun SettingsScreen(
                                 modifier = Modifier.size(20.dp)
                             )
                             Text(
-                                text = "SWITCH MODE",
+                                text = stringResource(R.string.settings_switch_mode),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                         Text(
-                            text = "Manual Switch Only",
+                            text = stringResource(R.string.settings_manual_switch_only),
                             style = MaterialTheme.typography.labelSmall,
                             color = if (!pumpMode) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                         )
@@ -362,7 +363,7 @@ fun SettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Text(
-                        text = "Network Connection Mode",
+                        text = stringResource(R.string.settings_network_connection_mode),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.secondary
@@ -372,7 +373,11 @@ fun SettingsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        listOf("WiFi MQTT" to 1, "AP Hotspot" to 0, "WiFi Debug" to 2).forEach { (label, modeIndex) ->
+                        listOf(
+                            stringResource(R.string.settings_wifi_mqtt) to 1,
+                            stringResource(R.string.settings_ap_hotspot) to 0,
+                            stringResource(R.string.settings_wifi_debug) to 2
+                        ).forEach { (label, modeIndex) ->
                             val selected = connMode == modeIndex
                             Surface(
                                 modifier = Modifier
@@ -404,7 +409,7 @@ fun SettingsScreen(
                     if (connMode == 1) {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(
-                                text = "WiFi STA Credentials",
+                                text = stringResource(R.string.settings_wifi_sta_credentials),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.primary
@@ -416,7 +421,7 @@ fun SettingsScreen(
                             ) {
                                 CompactTextField(
                                     value = wifiSSID, onValueChange = { wifiSSID = it },
-                                    label = "WiFi SSID",
+                                    label = stringResource(R.string.settings_label_wifi_ssid),
                                     modifier = Modifier.weight(1f)
                                 )
                                 Button(
@@ -439,7 +444,7 @@ fun SettingsScreen(
                                             strokeWidth = 2.dp
                                         )
                                         Spacer(modifier = Modifier.size(4.dp))
-                                        Text("Scanning...", style = MaterialTheme.typography.labelSmall)
+                                        Text(stringResource(R.string.settings_scanning), style = MaterialTheme.typography.labelSmall)
                                     } else {
                                         Icon(
                                             imageVector = Icons.Filled.Wifi,
@@ -447,7 +452,7 @@ fun SettingsScreen(
                                             modifier = Modifier.size(16.dp)
                                         )
                                         Spacer(modifier = Modifier.size(4.dp))
-                                        Text("Scan", style = MaterialTheme.typography.labelMedium)
+                                        Text(stringResource(R.string.settings_scan), style = MaterialTheme.typography.labelMedium)
                                     }
                                 }
                             }
@@ -455,7 +460,7 @@ fun SettingsScreen(
                             if (!isWifiOpen) {
                                 CompactTextField(
                                     value = wifiPass, onValueChange = { wifiPass = it },
-                                    label = "WiFi Password", isPassword = true
+                                    label = stringResource(R.string.settings_label_wifi_password), isPassword = true
                                 )
                             } else {
                                 Surface(
@@ -477,7 +482,7 @@ fun SettingsScreen(
                                             modifier = Modifier.size(16.dp)
                                         )
                                         Text(
-                                            text = "Open Network (No Password Required)",
+                                            text = stringResource(R.string.settings_open_network),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.onSecondaryContainer
                                         )
@@ -487,33 +492,33 @@ fun SettingsScreen(
 
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "MQTT Server Settings",
+                                text = stringResource(R.string.settings_mqtt_server),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             CompactTextField(
                                 value = mqttServer, onValueChange = { mqttServer = it },
-                                label = "MQTT Server Host"
+                                label = stringResource(R.string.settings_label_mqtt_host)
                             )
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 CompactTextField(
                                     value = mqttUser, onValueChange = { mqttUser = it },
-                                    label = "Username", modifier = Modifier.weight(1f)
+                                    label = stringResource(R.string.settings_label_username), modifier = Modifier.weight(1f)
                                 )
                                 CompactTextField(
                                     value = mqttPass, onValueChange = { mqttPass = it },
-                                    label = "Password", isPassword = true, modifier = Modifier.weight(1f)
+                                    label = stringResource(R.string.settings_label_password), isPassword = true, modifier = Modifier.weight(1f)
                                 )
                             }
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 CompactTextField(
                                     value = mqttTopic, onValueChange = { mqttTopic = it },
-                                    label = "Topic", modifier = Modifier.weight(2f)
+                                    label = stringResource(R.string.settings_label_topic), modifier = Modifier.weight(2f)
                                 )
                                 CompactTextField(
                                     value = mqttPort, onValueChange = { mqttPort = it },
-                                    label = "Port", isNumber = true, modifier = Modifier.weight(1f)
+                                    label = stringResource(R.string.settings_label_port), isNumber = true, modifier = Modifier.weight(1f)
                                 )
                             }
                         }
@@ -523,18 +528,18 @@ fun SettingsScreen(
                     if (connMode == 0) {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(
-                                text = "WiFi AP Hotspot Settings",
+                                text = stringResource(R.string.settings_wifi_ap_hotspot_settings),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             CompactTextField(
                                 value = apSSID, onValueChange = { apSSID = it },
-                                label = "AP SSID"
+                                label = stringResource(R.string.settings_label_ap_ssid)
                             )
                             CompactTextField(
                                 value = apPass, onValueChange = { apPass = it },
-                                label = "AP Password", isPassword = true
+                                label = stringResource(R.string.settings_label_ap_password), isPassword = true
                             )
                         }
                     }
@@ -543,18 +548,18 @@ fun SettingsScreen(
                     if (connMode == 2) {
                         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(
-                                text = "WiFi Debug Settings",
+                                text = stringResource(R.string.settings_wifi_debug_settings),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             CompactTextField(
                                 value = debugSSID, onValueChange = { debugSSID = it },
-                                label = "Debug SSID"
+                                label = stringResource(R.string.settings_label_debug_ssid)
                             )
                             CompactTextField(
                                 value = debugPass, onValueChange = { debugPass = it },
-                                label = "Debug Password", isPassword = true
+                                label = stringResource(R.string.settings_label_debug_password), isPassword = true
                             )
                         }
                     }
@@ -578,7 +583,7 @@ fun SettingsScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "Other Network Modes (Optional / Advanced)",
+                                    text = stringResource(R.string.settings_other_network_modes),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                                 )
@@ -588,7 +593,7 @@ fun SettingsScreen(
                                 ) {
                                     Icon(
                                         imageVector = if (showOtherNetworkModes) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                                        contentDescription = "Toggle other network settings"
+                                        contentDescription = stringResource(R.string.settings_toggle_other_network) 
                                     )
                                 }
                             }
@@ -603,31 +608,31 @@ fun SettingsScreen(
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     if (connMode != 1) {
-                                        Text("WiFi STA & MQTT Settings", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                                        CompactTextField(value = wifiSSID, onValueChange = { wifiSSID = it }, label = "WiFi SSID")
-                                        CompactTextField(value = wifiPass, onValueChange = { wifiPass = it }, label = "WiFi Password", isPassword = true)
+                                        Text(stringResource(R.string.settings_wifi_sta_mqtt), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                                        CompactTextField(value = wifiSSID, onValueChange = { wifiSSID = it }, label = stringResource(R.string.settings_label_wifi_ssid))
+                                        CompactTextField(value = wifiPass, onValueChange = { wifiPass = it }, label = stringResource(R.string.settings_label_wifi_password), isPassword = true)
                                         
-                                        CompactTextField(value = mqttServer, onValueChange = { mqttServer = it }, label = "MQTT Server Host")
+                                        CompactTextField(value = mqttServer, onValueChange = { mqttServer = it }, label = stringResource(R.string.settings_label_mqtt_host))
                                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            CompactTextField(value = mqttUser, onValueChange = { mqttUser = it }, label = "Username", modifier = Modifier.weight(1f))
-                                            CompactTextField(value = mqttPass, onValueChange = { mqttPass = it }, label = "Password", isPassword = true, modifier = Modifier.weight(1f))
+                                            CompactTextField(value = mqttUser, onValueChange = { mqttUser = it }, label = stringResource(R.string.settings_label_username), modifier = Modifier.weight(1f))
+                                            CompactTextField(value = mqttPass, onValueChange = { mqttPass = it }, label = stringResource(R.string.settings_label_password), isPassword = true, modifier = Modifier.weight(1f))
                                         }
                                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                            CompactTextField(value = mqttTopic, onValueChange = { mqttTopic = it }, label = "Topic", modifier = Modifier.weight(2f))
-                                            CompactTextField(value = mqttPort, onValueChange = { mqttPort = it }, label = "Port", isNumber = true, modifier = Modifier.weight(1f))
+                                            CompactTextField(value = mqttTopic, onValueChange = { mqttTopic = it }, label = stringResource(R.string.settings_label_topic), modifier = Modifier.weight(2f))
+                                            CompactTextField(value = mqttPort, onValueChange = { mqttPort = it }, label = stringResource(R.string.settings_label_port), isNumber = true, modifier = Modifier.weight(1f))
                                         }
                                     }
 
                                     if (connMode != 0) {
-                                        Text("WiFi AP Hotspot Settings", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                                        CompactTextField(value = apSSID, onValueChange = { apSSID = it }, label = "AP SSID")
-                                        CompactTextField(value = apPass, onValueChange = { apPass = it }, label = "AP Password", isPassword = true)
+                                        Text(stringResource(R.string.settings_wifi_ap_hotspot_settings), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                                        CompactTextField(value = apSSID, onValueChange = { apSSID = it }, label = stringResource(R.string.settings_label_ap_ssid))
+                                        CompactTextField(value = apPass, onValueChange = { apPass = it }, label = stringResource(R.string.settings_label_ap_password), isPassword = true)
                                     }
 
                                     if (connMode != 2) {
-                                        Text("WiFi Debug Settings", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
-                                        CompactTextField(value = debugSSID, onValueChange = { debugSSID = it }, label = "Debug SSID")
-                                        CompactTextField(value = debugPass, onValueChange = { debugPass = it }, label = "Debug Password", isPassword = true)
+                                        Text(stringResource(R.string.settings_wifi_debug_settings), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                                        CompactTextField(value = debugSSID, onValueChange = { debugSSID = it }, label = stringResource(R.string.settings_label_debug_ssid))
+                                        CompactTextField(value = debugPass, onValueChange = { debugPass = it }, label = stringResource(R.string.settings_label_debug_password), isPassword = true)
                                     }
                                 }
                             }
@@ -639,15 +644,15 @@ fun SettingsScreen(
                         onClick = {
                             // ── Validation: WiFi Password Length (8..64 chars) ──
                             if (!isWifiOpen && wifiPass.isNotBlank() && wifiPass != "********" && wifiPass.length !in 8..64) {
-                                viewModel.showMessage("Mật khẩu Wi-Fi phải từ 8 đến 64 ký tự")
+                                viewModel.showMessage(context.getString(R.string.settings_wifi_pass_length))
                                 return@Button
                             }
                             if (apPass.isNotBlank() && apPass != "********" && apPass.length !in 8..64) {
-                                viewModel.showMessage("Mật khẩu AP phải từ 8 đến 64 ký tự")
+                                viewModel.showMessage(context.getString(R.string.settings_ap_pass_length))
                                 return@Button
                             }
                             if (debugPass.isNotBlank() && debugPass != "********" && debugPass.length !in 8..64) {
-                                viewModel.showMessage("Mật khẩu Debug phải từ 8 đến 64 ký tự")
+                                viewModel.showMessage(context.getString(R.string.settings_debug_pass_length))
                                 return@Button
                             }
 
@@ -705,17 +710,17 @@ fun SettingsScreen(
                                 .size(18.dp)
                                 .padding(end = 4.dp)
                         )
-                        Text("Save Network Settings", style = MaterialTheme.typography.labelLarge)
+                        Text(stringResource(R.string.settings_save_network), style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }
 
             // ── Protection Thresholds (mA) ──
-            SectionHeader(title = "Protection Thresholds (mA)")
+            SectionHeader(title = stringResource(R.string.settings_protection_thresholds))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CompactTextField(
                     value = threshOff, onValueChange = { threshOff = it },
-                    label = "Off", isNumber = true, modifier = Modifier.weight(1f),
+                    label = stringResource(R.string.settings_label_off), isNumber = true, modifier = Modifier.weight(1f),
                     onFocusLost = {
                         val newInt = threshOff.toIntOrNull()
                         if (newInt != null && newInt != config?.threshOff) {
@@ -725,12 +730,12 @@ fun SettingsScreen(
                             val overloadVal = threshOverload.toIntOrNull() ?: (config?.threshOverload ?: 20000)
 
                             if (!(offVal < dryVal && dryVal < runningVal && runningVal < overloadVal)) {
-                                viewModel.showMessage("Ngưỡng dòng phải theo thứ tự: Off < Dry Run < Running < Overload")
+                                viewModel.showMessage(context.getString(R.string.settings_threshold_order))
                                 threshOff = config?.threshOff?.toString() ?: "100"
                             } else {
                                 pendingSingleField = PendingFieldChange(
                                     key = "threshOff",
-                                    displayName = "Off Threshold (mA)",
+                                    displayName = context.getString(R.string.settings_display_off_threshold),
                                     newValue = newInt,
                                     revertAction = { threshOff = config?.threshOff?.toString() ?: "100" }
                                 )
@@ -740,7 +745,7 @@ fun SettingsScreen(
                 )
                 CompactTextField(
                     value = threshDry, onValueChange = { threshDry = it },
-                    label = "Dry Run", isNumber = true, modifier = Modifier.weight(1f),
+                    label = stringResource(R.string.settings_label_dry_run), isNumber = true, modifier = Modifier.weight(1f),
                     onFocusLost = {
                         val newInt = threshDry.toIntOrNull()
                         if (newInt != null && newInt != config?.threshNoWater) {
@@ -750,12 +755,12 @@ fun SettingsScreen(
                             val overloadVal = threshOverload.toIntOrNull() ?: (config?.threshOverload ?: 20000)
 
                             if (!(offVal < dryVal && dryVal < runningVal && runningVal < overloadVal)) {
-                                viewModel.showMessage("Ngưỡng dòng phải theo thứ tự: Off < Dry Run < Running < Overload")
+                                viewModel.showMessage(context.getString(R.string.settings_threshold_order))
                                 threshDry = config?.threshNoWater?.toString() ?: "2000"
                             } else {
                                 pendingSingleField = PendingFieldChange(
                                     key = "threshNoWater",
-                                    displayName = "Dry Run Threshold (mA)",
+                                    displayName = context.getString(R.string.settings_display_dry_threshold),
                                     newValue = newInt,
                                     revertAction = { threshDry = config?.threshNoWater?.toString() ?: "2000" }
                                 )
@@ -765,24 +770,24 @@ fun SettingsScreen(
                 )
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                CompactTextField(
-                    value = threshRunning, onValueChange = { threshRunning = it },
-                    label = "Running", isNumber = true, modifier = Modifier.weight(1f),
-                    onFocusLost = {
-                        val newInt = threshRunning.toIntOrNull()
-                        if (newInt != null && newInt != config?.threshRunning) {
-                            val offVal = threshOff.toIntOrNull() ?: (config?.threshOff ?: 100)
-                            val dryVal = threshDry.toIntOrNull() ?: (config?.threshNoWater ?: 2000)
-                            val runningVal = newInt
-                            val overloadVal = threshOverload.toIntOrNull() ?: (config?.threshOverload ?: 20000)
+                        CompactTextField(
+                            value = threshRunning, onValueChange = { threshRunning = it },
+                            label = stringResource(R.string.settings_label_running), isNumber = true, modifier = Modifier.weight(1f),
+                            onFocusLost = {
+                                val newInt = threshRunning.toIntOrNull()
+                                if (newInt != null && newInt != config?.threshRunning) {
+                                    val offVal = threshOff.toIntOrNull() ?: (config?.threshOff ?: 100)
+                                    val dryVal = threshDry.toIntOrNull() ?: (config?.threshNoWater ?: 2000)
+                                    val runningVal = newInt
+                                    val overloadVal = threshOverload.toIntOrNull() ?: (config?.threshOverload ?: 20000)
 
-                            if (!(offVal < dryVal && dryVal < runningVal && runningVal < overloadVal)) {
-                                viewModel.showMessage("Ngưỡng dòng phải theo thứ tự: Off < Dry Run < Running < Overload")
+                                    if (!(offVal < dryVal && dryVal < runningVal && runningVal < overloadVal)) {
+                                        viewModel.showMessage(context.getString(R.string.settings_threshold_order))
                                 threshRunning = config?.threshRunning?.toString() ?: "5000"
                             } else {
                                 pendingSingleField = PendingFieldChange(
                                     key = "threshRunning",
-                                    displayName = "Running Threshold (mA)",
+                                    displayName = context.getString(R.string.settings_display_running_threshold),
                                     newValue = newInt,
                                     revertAction = { threshRunning = config?.threshRunning?.toString() ?: "5000" }
                                 )
@@ -792,7 +797,7 @@ fun SettingsScreen(
                 )
                 CompactTextField(
                     value = threshOverload, onValueChange = { threshOverload = it },
-                    label = "Overload", isNumber = true, modifier = Modifier.weight(1f),
+                    label = stringResource(R.string.settings_label_overload), isNumber = true, modifier = Modifier.weight(1f),
                     onFocusLost = {
                         val newInt = threshOverload.toIntOrNull()
                         if (newInt != null && newInt != config?.threshOverload) {
@@ -802,12 +807,12 @@ fun SettingsScreen(
                             val overloadVal = newInt
 
                             if (!(offVal < dryVal && dryVal < runningVal && runningVal < overloadVal)) {
-                                viewModel.showMessage("Ngưỡng dòng phải theo thứ tự: Off < Dry Run < Running < Overload")
+                                viewModel.showMessage(context.getString(R.string.settings_threshold_order))
                                 threshOverload = config?.threshOverload?.toString() ?: "20000"
                             } else {
                                 pendingSingleField = PendingFieldChange(
                                     key = "threshOverload",
-                                    displayName = "Overload Threshold (mA)",
+                                    displayName = context.getString(R.string.settings_display_overload_threshold),
                                     newValue = newInt,
                                     revertAction = { threshOverload = config?.threshOverload?.toString() ?: "20000" }
                                 )
@@ -818,21 +823,21 @@ fun SettingsScreen(
             }
 
             // ── Timeouts (ms) ──
-            SectionHeader(title = "Timeouts (ms)")
+            SectionHeader(title = stringResource(R.string.settings_timeouts))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CompactTextField(
                     value = dryTimeout, onValueChange = { dryTimeout = it },
-                    label = "Dry Run", isNumber = true, modifier = Modifier.weight(1f),
+                    label = stringResource(R.string.settings_label_dry_run_timeout), isNumber = true, modifier = Modifier.weight(1f),
                     onFocusLost = {
                         val newInt = dryTimeout.toIntOrNull()
                         if (newInt != null && newInt != config?.dryTimeout) {
                             if (newInt <= 0) {
-                                viewModel.showMessage("Thời gian Timeout phải lớn hơn 0")
+                                viewModel.showMessage(context.getString(R.string.settings_timeout_positive))
                                 dryTimeout = config?.dryTimeout?.toString() ?: "7000"
                             } else {
                                 pendingSingleField = PendingFieldChange(
                                     key = "dryTimeout",
-                                    displayName = "Dry Run Timeout (ms)",
+                                    displayName = context.getString(R.string.settings_display_dry_timeout),
                                     newValue = newInt,
                                     revertAction = { dryTimeout = config?.dryTimeout?.toString() ?: "7000" }
                                 )
@@ -842,17 +847,17 @@ fun SettingsScreen(
                 )
                 CompactTextField(
                     value = overloadTimeout, onValueChange = { overloadTimeout = it },
-                    label = "Overload", isNumber = true, modifier = Modifier.weight(1f),
+                    label = stringResource(R.string.settings_label_overload_timeout), isNumber = true, modifier = Modifier.weight(1f),
                     onFocusLost = {
                         val newInt = overloadTimeout.toIntOrNull()
                         if (newInt != null && newInt != config?.overloadTimeout) {
                             if (newInt <= 0) {
-                                viewModel.showMessage("Thời gian Timeout phải lớn hơn 0")
+                                viewModel.showMessage(context.getString(R.string.settings_timeout_positive))
                                 overloadTimeout = config?.overloadTimeout?.toString() ?: "1000"
                             } else {
                                 pendingSingleField = PendingFieldChange(
                                     key = "overloadTimeout",
-                                    displayName = "Overload Timeout (ms)",
+                                    displayName = context.getString(R.string.settings_display_overload_timeout),
                                     newValue = newInt,
                                     revertAction = { overloadTimeout = config?.overloadTimeout?.toString() ?: "1000" }
                                 )
@@ -863,12 +868,16 @@ fun SettingsScreen(
             }
 
             // ── Relay Startup Mode ──
-            SectionHeader(title = "Relay Startup Mode")
+            SectionHeader(title = stringResource(R.string.settings_relay_startup_mode))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                listOf("OFF" to 0, "ON" to 1, "KEEP LAST" to 2).forEach { (label, modeIndex) ->
+                listOf(
+                    stringResource(R.string.settings_relay_off) to 0,
+                    stringResource(R.string.settings_relay_on) to 1,
+                    stringResource(R.string.settings_relay_keep_last) to 2
+                ).forEach { (label, modeIndex) ->
                     val selected = relayStartMode == modeIndex
                     Surface(
                         modifier = Modifier
@@ -899,17 +908,17 @@ fun SettingsScreen(
             }
 
             // ── Calibration Coefficients ──
-            SectionHeader(title = "Calibration Coefficients")
+            SectionHeader(title = stringResource(R.string.settings_calibration_coefficients))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CompactTextField(
                     value = cCal, onValueChange = { cCal = it },
-                    label = "Current (cCal)", isNumber = true, modifier = Modifier.weight(1f),
+                    label = stringResource(R.string.settings_label_current_cal), isNumber = true, modifier = Modifier.weight(1f),
                     onFocusLost = {
                         val newDbl = cCal.toDoubleOrNull()
                         if (newDbl != null && newDbl != config?.cCal) {
                             pendingSingleField = PendingFieldChange(
                                 key = "cCal",
-                                displayName = "Current Calibration (cCal)",
+                                displayName = context.getString(R.string.settings_display_cal_current),
                                 newValue = newDbl,
                                 revertAction = { cCal = config?.cCal?.toString() ?: "1.0" }
                             )
@@ -918,13 +927,13 @@ fun SettingsScreen(
                 )
                 CompactTextField(
                     value = vCal, onValueChange = { vCal = it },
-                    label = "Voltage (vCal)", isNumber = true, modifier = Modifier.weight(1f),
+                    label = stringResource(R.string.settings_label_voltage_cal), isNumber = true, modifier = Modifier.weight(1f),
                     onFocusLost = {
                         val newDbl = vCal.toDoubleOrNull()
                         if (newDbl != null && newDbl != config?.vCal) {
                             pendingSingleField = PendingFieldChange(
                                 key = "vCal",
-                                displayName = "Voltage Calibration (vCal)",
+                                displayName = context.getString(R.string.settings_display_cal_voltage),
                                 newValue = newDbl,
                                 revertAction = { vCal = config?.vCal?.toString() ?: "1.0" }
                             )
@@ -933,13 +942,13 @@ fun SettingsScreen(
                 )
                 CompactTextField(
                     value = pCal, onValueChange = { pCal = it },
-                    label = "Power (pCal)", isNumber = true, modifier = Modifier.weight(1f),
+                    label = stringResource(R.string.settings_label_power_cal), isNumber = true, modifier = Modifier.weight(1f),
                     onFocusLost = {
                         val newDbl = pCal.toDoubleOrNull()
                         if (newDbl != null && newDbl != config?.pCal) {
                             pendingSingleField = PendingFieldChange(
                                 key = "pCal",
-                                displayName = "Power Calibration (pCal)",
+                                displayName = context.getString(R.string.settings_display_cal_power),
                                 newValue = newDbl,
                                 revertAction = { pCal = config?.pCal?.toString() ?: "1.0" }
                             )
@@ -967,7 +976,7 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Hiệu chỉnh theo giá trị thực tế",
+                            text = stringResource(R.string.settings_auto_calibrate),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold
@@ -978,7 +987,7 @@ fun SettingsScreen(
                         ) {
                             Icon(
                                 imageVector = if (showCalibCard) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                                contentDescription = "Toggle auto-calibrate"
+                                contentDescription = stringResource(R.string.settings_toggle_calibrate)
                             )
                         }
                     }
@@ -996,21 +1005,21 @@ fun SettingsScreen(
                                 CompactTextField(
                                     value = realAmps,
                                     onValueChange = { realAmps = it },
-                                    label = "Dòng điện",
+                                    label = stringResource(R.string.settings_label_current),
                                     isNumber = true,
                                     modifier = Modifier.weight(1f)
                                 )
                                 CompactTextField(
                                     value = realVolts,
                                     onValueChange = { realVolts = it },
-                                    label = "Điện áp",
+                                    label = stringResource(R.string.settings_label_voltage),
                                     isNumber = true,
                                     modifier = Modifier.weight(1f)
                                 )
                                 CompactTextField(
                                     value = realWatts,
                                     onValueChange = { realWatts = it },
-                                    label = "Công suất",
+                                    label = stringResource(R.string.settings_label_power),
                                     isNumber = true,
                                     modifier = Modifier.weight(1f)
                                 )
@@ -1038,7 +1047,7 @@ fun SettingsScreen(
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "Reset",
+                                        text = stringResource(R.string.settings_reset),
                                         style = MaterialTheme.typography.labelSmall
                                     )
                                 }
@@ -1051,7 +1060,7 @@ fun SettingsScreen(
                                         realWatts.toDoubleOrNull()?.let { payload["power"] = it }
 
                                         if (payload.isEmpty()) {
-                                            viewModel.showMessage("Vui lòng nhập ít nhất một giá trị thực tế")
+                                            viewModel.showMessage(context.getString(R.string.settings_enter_real_values))
                                         } else {
                                             showCalibConfirmDialog = payload
                                         }
@@ -1071,7 +1080,7 @@ fun SettingsScreen(
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "Gửi",
+                                        text = stringResource(R.string.settings_send_calibration),
                                         style = MaterialTheme.typography.labelSmall
                                     )
                                 }
@@ -1082,7 +1091,7 @@ fun SettingsScreen(
             }
 
             // ── System Log Settings ──
-            SectionHeader(title = "System Logging")
+            SectionHeader(title = stringResource(R.string.settings_system_logging))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1091,7 +1100,7 @@ fun SettingsScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Enable System Log File",
+                    text = stringResource(R.string.settings_enable_system_log),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Switch(
@@ -1106,13 +1115,13 @@ fun SettingsScreen(
             }
             CompactTextField(
                 value = sysLogFileLevel, onValueChange = { sysLogFileLevel = it },
-                label = "Log Level", isNumber = true,
+                label = stringResource(R.string.settings_label_log_level), isNumber = true,
                 onFocusLost = {
                     val newInt = sysLogFileLevel.toIntOrNull()
                     if (newInt != null && newInt != config?.sysLogFileLevel) {
                         pendingSingleField = PendingFieldChange(
                             key = "sysLogFileLevel",
-                            displayName = "System Log Level",
+                            displayName = context.getString(R.string.settings_display_log_level),
                             newValue = newInt,
                             revertAction = { sysLogFileLevel = config?.sysLogFileLevel?.toString() ?: "0" }
                         )
@@ -1122,7 +1131,6 @@ fun SettingsScreen(
 
             // ── Language Selector ──
             SectionHeader(title = stringResource(R.string.language))
-            val context = LocalContext.current
             val currentLangCode = remember { LocaleHelper.getLanguageCode(context) }
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1159,7 +1167,7 @@ fun SettingsScreen(
             }
 
             // ── Danger Zone ──
-            SectionHeader(title = "Danger Zone")
+            SectionHeader(title = stringResource(R.string.settings_danger_zone))
             OutlinedButton(
                 onClick = { showManualRebootDialog = true },
                 modifier = Modifier.fillMaxWidth().height(40.dp),
@@ -1169,7 +1177,7 @@ fun SettingsScreen(
                 )
             ) {
                 Icon(Icons.Filled.RestartAlt, null, modifier = Modifier.padding(end = 4.dp))
-                Text("Reboot", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.settings_reboot), style = MaterialTheme.typography.labelMedium)
             }
 
             Spacer(modifier = Modifier.height(80.dp))
@@ -1192,13 +1200,13 @@ fun SettingsScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Fetching device configuration...",
+                        text = stringResource(R.string.settings_fetching_config),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Retrying every 5 seconds until connected...",
+                        text = stringResource(R.string.settings_retrying),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1221,7 +1229,7 @@ fun SettingsScreen(
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(36.dp))
                         Text(
-                            text = "Saving configuration...",
+                            text = stringResource(R.string.settings_saving),
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
@@ -1244,7 +1252,7 @@ fun SettingsScreen(
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(36.dp))
                         Text(
-                            text = "Rebooting device...",
+                            text = stringResource(R.string.settings_rebooting),
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
@@ -1274,7 +1282,7 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Available Wi-Fi Networks",
+                            text = stringResource(R.string.settings_available_wifi),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -1285,14 +1293,14 @@ fun SettingsScreen(
                             if (isScanningWifi) {
                                 CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
                             } else {
-                                Icon(Icons.Filled.Refresh, contentDescription = "Rescan")
+                                Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.settings_rescan))
                             }
                         }
                     }
 
                     if (wifiNetworks.isEmpty()) {
                         Text(
-                            text = "No Wi-Fi networks found.",
+                            text = stringResource(R.string.settings_no_wifi),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1342,14 +1350,14 @@ fun SettingsScreen(
                                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                                             ) {
                                                 Text(
-                                                    text = net.name.ifBlank { "<Hidden Network>" },
+                                                    text = net.name.ifBlank { context.getString(R.string.settings_hidden_network) },
                                                     style = MaterialTheme.typography.bodyMedium,
                                                     fontWeight = FontWeight.SemiBold
                                                 )
                                                 if (net.isEncrypt) {
                                                     Icon(
                                                         imageVector = Icons.Filled.Lock,
-                                                        contentDescription = "Secured Network",
+                                                        contentDescription = stringResource(R.string.settings_secured_network),
                                                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                                                         modifier = Modifier.size(14.dp).offset(y = (-1).dp)
                                                     )
@@ -1389,7 +1397,7 @@ fun SettingsScreen(
                             onClick = { viewModel.dismissWifiScanDialog() },
                             shape = MaterialTheme.shapes.small
                         ) {
-                            Text("Close")
+                            Text(stringResource(R.string.settings_close))
                         }
                     }
                 }
@@ -1400,9 +1408,9 @@ fun SettingsScreen(
     // ── Single Field Change Confirmation Dialog ──
     pendingSingleField?.let { change ->
         ConfirmDialog(
-            title = "Confirm Save ${change.displayName}",
-            message = "Save new value for ${change.displayName}: ${change.newValue}?",
-            confirmText = "Save Now",
+            title = stringResource(R.string.settings_confirm_save_title, change.displayName),
+            message = stringResource(R.string.settings_confirm_save_message, change.displayName, change.newValue.toString()),
+            confirmText = stringResource(R.string.settings_confirm_save),
             onConfirm = {
                 val fieldToSave = change
                 pendingSingleField = null
@@ -1418,12 +1426,12 @@ fun SettingsScreen(
     // ── Save Network Settings Confirmation Dialog ──
     if (showNetworkConfirmDialog) {
         ConfirmDialog(
-            title = "Confirm Network Settings",
+            title = stringResource(R.string.settings_confirm_network_title),
             message = if (pendingNetworkUpdates.isNotEmpty()) 
-                "Send ${pendingNetworkUpdates.size} modified network setting(s) to device?\n\nModified fields: ${pendingNetworkUpdates.keys.joinToString(", ")}"
+                stringResource(R.string.settings_network_modified, pendingNetworkUpdates.size, pendingNetworkUpdates.keys.joinToString(", "))
             else 
-                "Save updated local MQTT connection parameters?",
-            confirmText = "Save Now",
+                stringResource(R.string.settings_save_local_mqtt),
+            confirmText = stringResource(R.string.settings_confirm_save),
             onConfirm = {
                 showNetworkConfirmDialog = false
                 if (pendingLocalConnectionChanged) {
@@ -1449,12 +1457,12 @@ fun SettingsScreen(
     // ── Mode Switch Dialog (PUMP MODE / SWITCH MODE) ──
     showModeDialog?.let { targetMode ->
         ConfirmDialog(
-            title = if (targetMode) "Switch to PUMP MODE?" else "Switch to SWITCH MODE?",
+            title = if (targetMode) stringResource(R.string.settings_switch_pump_mode) else stringResource(R.string.settings_switch_switch_mode),
             message = if (targetMode)
-                "PUMP MODE enables smart protections. It will automatically turn off the relay if it detects 'Dry Run' or 'Overload'. Use this ONLY for water pumps."
+                stringResource(R.string.settings_pump_mode_desc)
             else
-                "SWITCH MODE disables all smart protections. The device will act as a normal manual switch.",
-            confirmText = "Confirm & Save",
+                stringResource(R.string.settings_switch_mode_desc),
+            confirmText = stringResource(R.string.settings_confirm_and_save),
             isDangerous = !targetMode,
             onConfirm = {
                 showModeDialog = null
@@ -1468,14 +1476,14 @@ fun SettingsScreen(
     // ── Relay Startup Mode Dialog ──
     showRelayModeDialog?.let { targetMode ->
         val modeText = when (targetMode) {
-            0 -> "OFF"
-            1 -> "ON"
-            else -> "KEEP LAST"
+            0 -> stringResource(R.string.settings_relay_off)
+            1 -> stringResource(R.string.settings_relay_on)
+            else -> stringResource(R.string.settings_relay_keep_last)
         }
         ConfirmDialog(
-            title = "Change Relay Startup Mode?",
-            message = "Set relay startup mode to $modeText?",
-            confirmText = "Confirm & Save",
+            title = stringResource(R.string.settings_change_relay_mode),
+            message = stringResource(R.string.settings_relay_mode_message, modeText),
+            confirmText = stringResource(R.string.settings_confirm_and_save),
             onConfirm = {
                 showRelayModeDialog = null
                 relayStartMode = targetMode
@@ -1488,9 +1496,9 @@ fun SettingsScreen(
     // ── System Log Switch Dialog ──
     showLogSwitchDialog?.let { targetState ->
         ConfirmDialog(
-            title = if (targetState) "Enable System Log File?" else "Disable System Log File?",
-            message = if (targetState) "Enable logging system events to file?" else "Disable logging system events to file?",
-            confirmText = "Confirm & Save",
+            title = if (targetState) stringResource(R.string.settings_enable_log_title) else stringResource(R.string.settings_disable_log_title),
+            message = if (targetState) stringResource(R.string.settings_enable_log_msg) else stringResource(R.string.settings_disable_log_msg),
+            confirmText = stringResource(R.string.settings_confirm_and_save),
             onConfirm = {
                 showLogSwitchDialog = null
                 sysLogFileEnabled = targetState
@@ -1503,10 +1511,10 @@ fun SettingsScreen(
     // ── Reboot Required Dialog (Response needReboot == true) ──
     if (showRebootPrompt) {
         ConfirmDialog(
-            title = "Reboot Required",
-            message = "Configuration saved successfully. The device requires a reboot to apply the new settings. Reboot now?",
-            confirmText = "Reboot Now",
-            dismissText = "Later",
+            title = stringResource(R.string.settings_reboot_required),
+            message = stringResource(R.string.settings_reboot_required_msg),
+            confirmText = stringResource(R.string.settings_reboot_now),
+            dismissText = stringResource(R.string.settings_later),
             isDangerous = false,
             onConfirm = {
                 viewModel.reboot()
@@ -1520,9 +1528,9 @@ fun SettingsScreen(
     // ── Manual Reboot Dialog ──
     if (showManualRebootDialog) {
         ConfirmDialog(
-            title = "Reboot Device",
-            message = "The device will restart. Connection will be lost temporarily.",
-            confirmText = "Reboot",
+            title = stringResource(R.string.settings_reboot_device),
+            message = stringResource(R.string.settings_reboot_device_msg),
+            confirmText = stringResource(R.string.settings_reboot),
             isDangerous = true,
             onConfirm = {
                 showManualRebootDialog = false
@@ -1535,9 +1543,9 @@ fun SettingsScreen(
     // ── Factory Reset Dialog ──
     if (showResetDialog) {
         ConfirmDialog(
-            title = "Factory Reset",
-            message = "This will erase ALL configuration and restore defaults. The device will reboot.",
-            confirmText = "Reset",
+            title = stringResource(R.string.settings_factory_reset),
+            message = stringResource(R.string.settings_factory_reset_msg),
+            confirmText = stringResource(R.string.settings_reset),
             isDangerous = true,
             onConfirm = {
                 showResetDialog = false
@@ -1551,17 +1559,17 @@ fun SettingsScreen(
     showCalibConfirmDialog?.let { payload ->
         val details = payload.entries.joinToString("\n") { (k, v) ->
             val name = when(k) {
-                "current" -> "Dòng điện (A)"
-                "voltage" -> "Điện áp (V)"
-                "power" -> "Công suất (W)"
+                "current" -> context.getString(R.string.settings_label_current)
+                "voltage" -> context.getString(R.string.settings_label_voltage)
+                "power" -> context.getString(R.string.settings_label_power)
                 else -> k
             }
             "• $name: $v"
         }
         ConfirmDialog(
-            title = "Xác nhận Hiệu chỉnh Thực tế",
-            message = "Gửi các thông số thực tế sau đến thiết bị để tính toán lại hệ số calib?\n\n$details",
-            confirmText = "Gửi Hiệu Chỉnh",
+            title = stringResource(R.string.settings_confirm_calibrate_title),
+            message = stringResource(R.string.settings_confirm_calibrate_msg, details),
+            confirmText = stringResource(R.string.settings_send_calibration),
             onConfirm = {
                 showCalibConfirmDialog = null
                 viewModel.calibrate(payload)
@@ -1573,9 +1581,9 @@ fun SettingsScreen(
     // ── Reset Calibration Confirmation Dialog ──
     if (showResetCalibConfirmDialog) {
         ConfirmDialog(
-            title = "Khôi phục Hiệu chỉnh Mặc định",
-            message = "Xác nhận khôi phục các hệ số cCal, vCal, pCal về mặc định phần cứng ban đầu?",
-            confirmText = "Khôi phục Mặc định",
+            title = stringResource(R.string.settings_reset_calibration_title),
+            message = stringResource(R.string.settings_reset_calibration_msg),
+            confirmText = stringResource(R.string.settings_reset_to_default),
             isDangerous = true,
             onConfirm = {
                 showResetCalibConfirmDialog = false
