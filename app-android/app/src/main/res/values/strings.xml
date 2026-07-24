@@ -79,6 +79,9 @@
     <string name="history_hour_tooltip">Hour %s: %d Wh</string>
     <string name="history_monthly_chart_title">MONTHLY CONSUMPTION</string>
     <string name="history_unit_kwh">Unit: kWh</string>
+    <string name="history_unit_wh">Unit: Wh</string>
+    <string name="history_total">Total: %s</string>
+    <string name="history_times">(%d times)</string>
     <string name="history_monthly_daily_chart_title">MONTHLY DAILY CONSUMPTION</string>
     <string name="history_month_label">Month %s</string>
     <string name="history_day_tooltip">Day %d/%s: %s</string>

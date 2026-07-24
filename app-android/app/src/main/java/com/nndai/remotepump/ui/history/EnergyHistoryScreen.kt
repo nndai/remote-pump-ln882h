@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -50,7 +51,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberDatePickerState
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.TimeZone
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -105,6 +105,7 @@ fun EnergyHistoryScreen(
     var showMonthPickerDialog by remember { mutableStateOf(false) }
     var selectedHourLog by remember { mutableStateOf<HourlyEnergyLog?>(null) }
     var selectedHalfMonthDayLog by remember { mutableStateOf<HalfMonthDayEnergyLog?>(null) }
+    var selectedMonthLog by remember { mutableStateOf<MonthlyEnergyLog?>(null) }
 
     val todayStr = remember { LogRepository.getTodayDateStr() }
 
@@ -125,96 +126,6 @@ fun EnergyHistoryScreen(
             isSyncing = isSyncing,
             onSyncClick = { viewModel.syncData(force = true) }
         )
-
-        // ── 2. Daily Summary Cards ──
-        val totalWh = dailyEnergyLog?.totalWh ?: 0L
-        val toggleCount = toggleEvents.size
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            // Card 1: Tổng điện năng tiêu thụ ngày
-            Surface(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(MaterialTheme.shapes.medium),
-                shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
-            ) {
-                Row(
-                    modifier = Modifier.padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.EnergySavingsLeaf,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Column {
-                        val displayValue = if (totalWh >= 1000) {
-                            String.format(Locale.US, "%.2f kWh", totalWh / 1000f)
-                        } else {
-                            "$totalWh Wh"
-                        }
-                        Text(
-                            text = displayValue,
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 17.sp
-                            ),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = stringResource(R.string.history_daily_consumption),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
-            // Card 2: Lịch sử bật/tắt (theo ngày chọn của Toggle Log)
-            Surface(
-                modifier = Modifier
-                    .weight(1f)
-                    .clip(MaterialTheme.shapes.medium),
-                shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.surface,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
-            ) {
-                Row(
-                    modifier = Modifier.padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.History,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Column {
-                        Text(
-                            text = stringResource(R.string.history_toggle_count_format, toggleCount),
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 17.sp
-                            ),
-                            color = MaterialTheme.colorScheme.secondary
-                        )
-                        Text(
-                            text = stringResource(R.string.history_toggle_count_today),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        }
 
         // ── 3. 24-Hour Power Bar Chart with Compact Date Selector ──
         val hourlyList = dailyEnergyLog?.hourlyList ?: (0..23).map { HourlyEnergyLog(it, 0L) }
@@ -237,7 +148,11 @@ fun EnergyHistoryScreen(
         )
 
         // ── 5. 6-Month Power Bar Chart ──
-        MonthlyBarChartCard(monthlyLogs = monthlyEnergyLogs)
+        MonthlyBarChartCard(
+            monthlyLogs = monthlyEnergyLogs,
+            selectedMonthLog = selectedMonthLog,
+            onMonthClick = { selectedMonthLog = if (selectedMonthLog == it) null else it }
+        )
 
         // ── 6. Toggle Logs Event List with Compact Date Selector ──
         ToggleEventsCard(
@@ -369,74 +284,105 @@ private fun DailyHourlyBarChartCard(
             modifier = Modifier.padding(8.dp, 8.dp, 16.dp, 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Header tiêu đề & Nút chọn ngày nhỏ gọn
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(start = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
+                // Header tiêu đề & Nút chọn ngày nhỏ gọn
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.BarChart,
-                        contentDescription = null,
-                        tint = CyanBlue,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = stringResource(R.string.history_daily_chart_title),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                // Nút chọn ngày độc lập cho Power Log
-                Surface(
-                    onClick = onSelectDateClick,
-                    shape = MaterialTheme.shapes.extraSmall,
-                    color = MaterialTheme.colorScheme.surfaceVariant
+                    modifier = Modifier.fillMaxWidth().padding(start = 8.dp).height(40.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.DateRange,
+                            imageVector = Icons.Filled.BarChart,
                             contentDescription = null,
                             tint = CyanBlue,
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = displayDate,
-                            style = MaterialTheme.typography.labelSmall,
+                            text = stringResource(R.string.history_daily_chart_title),
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                }
-            }
 
-            // Tooltip xem chi tiết khi chạm cột
-            if (selectedHourLog != null) {
-                val h = selectedHourLog.hour
-                val timeRangeStr = "${h}h-${(h + 1) % 24}h"
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = stringResource(R.string.history_hour_tooltip, timeRangeStr, selectedHourLog.energyWh),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = CyanBlue,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        textAlign = TextAlign.Center
-                    )
+                    // Nút chọn ngày độc lập cho Power Log
+                    Surface(
+                        onClick = onSelectDateClick,
+                        shape = MaterialTheme.shapes.extraSmall,
+                        color = MaterialTheme.colorScheme.surfaceVariant
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.DateRange,
+                                contentDescription = null,
+                                tint = CyanBlue,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = displayDate,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+                }
+
+                // Tooltip hoặc Tổng kWh
+                if (selectedHourLog != null) {
+                    val h = selectedHourLog.hour
+                    val timeRangeStr = "${h}h-${(h + 1) % 24}h"
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = stringResource(R.string.history_hour_tooltip, timeRangeStr, selectedHourLog.energyWh),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = CyanBlue,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = Color.Transparent,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val totalWh = canonicalHourlyList.sumOf { it.energyWh }
+                        val displayWh = if (totalWh >= 1000) String.format(Locale.US, "%.2f kWh", totalWh / 1000f) else "$totalWh Wh"
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(start = 8.dp, top = 6.dp, bottom = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.history_unit_wh),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                text = stringResource(R.string.history_total, displayWh),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
 
@@ -547,7 +493,9 @@ private fun DailyHourlyBarChartCard(
 
 @Composable
 private fun MonthlyBarChartCard(
-    monthlyLogs: List<MonthlyEnergyLog>
+    monthlyLogs: List<MonthlyEnergyLog>,
+    selectedMonthLog: MonthlyEnergyLog?,
+    onMonthClick: (MonthlyEnergyLog) -> Unit
 ) {
     val maxWh = remember(monthlyLogs) {
         (monthlyLogs.maxOfOrNull { it.totalWh } ?: 0L).coerceAtLeast(1L)
@@ -563,42 +511,89 @@ private fun MonthlyBarChartCard(
     ) {
         Column(
             modifier = Modifier.padding(2.dp, 20.dp, 16.dp, 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.BarChart,
-                        contentDescription = null,
-                        tint = GreenOk,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = stringResource(R.string.history_monthly_chart_title),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.BarChart,
+                            contentDescription = null,
+                            tint = GreenOk,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = stringResource(R.string.history_monthly_chart_title),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
-                Text(
-                    text = stringResource(R.string.history_unit_kwh),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+
+                // Tooltip hoặc Tổng kWh
+                if (selectedMonthLog != null) {
+                    val displayWh = if (selectedMonthLog.totalWh >= 1000) {
+                        String.format(Locale.US, "%.2f kWh", selectedMonthLog.totalWh / 1000f)
+                    } else {
+                        "${selectedMonthLog.totalWh} Wh"
+                    }
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.fillMaxWidth().padding(start = 16.dp)
+                    ) {
+                        Text(
+                            text = "Tháng ${selectedMonthLog.yearMonthStr}: $displayWh",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = GreenOk,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = Color.Transparent,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val totalWh = monthlyLogs.sumOf { it.totalWh }
+                        val displayWh = if (totalWh >= 1000) String.format(Locale.US, "%.2f kWh", totalWh / 1000f) else "$totalWh Wh"
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(start = 14.dp, top = 6.dp, bottom = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.history_unit_kwh),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                text = stringResource(R.string.history_total, displayWh),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
             }
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(160.dp)
-                    .padding(top = 4.dp),
+                    .height(160.dp),
                 verticalAlignment = Alignment.Bottom
             ) {
                 // Trục Y (Bên trái)
@@ -607,7 +602,7 @@ private fun MonthlyBarChartCard(
                     modifier = Modifier
                         .width(36.dp)
                         .fillMaxSize()
-                        .padding(bottom = 18.dp, top = 14.dp),
+                        .padding(bottom = 18.dp, top = 16.dp),
                     verticalArrangement = Arrangement.SpaceBetween,
                     horizontalAlignment = Alignment.End
                 ) {
@@ -659,20 +654,26 @@ private fun MonthlyBarChartCard(
 
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f).clickable { onMonthClick(mLog) }
                         ) {
                             Text(
                                 text = if (mLog.totalWh > 0) String.format(Locale.US, "%.1f", kwhVal) else "0",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
+
+                            val isSelected = (selectedMonthLog?.yearMonthStr == mLog.yearMonthStr)
+                            val barColor = when {
+                                isSelected -> OrangeWarning
+                                mLog.totalWh > 0 -> CyanBlue
+                                else -> MaterialTheme.colorScheme.surfaceVariant
+                            }
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth(0.95f)
-                                    .height((120 * ratio).dp)
+                                    .height((110 * ratio).dp)
                                     .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                                    .background(if (mLog.totalWh > 0) CyanBlue else MaterialTheme.colorScheme.surfaceVariant)
+                                    .background(barColor)
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
@@ -732,6 +733,11 @@ private fun ToggleEventsCard(
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.history_times, events.size),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -1086,79 +1092,110 @@ private fun MonthlyDailyBarChartCard(
             modifier = Modifier.padding(8.dp, 8.dp, 16.dp, 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Header tiêu đề & Nút chọn tháng
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
+                // Header tiêu đề & Nút chọn tháng
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.BarChart,
-                        contentDescription = null,
-                        tint = CyanBlue,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = stringResource(R.string.history_monthly_daily_chart_title),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                // Nút chọn tháng
-                Surface(
-                    onClick = onSelectMonthClick,
-                    shape = MaterialTheme.shapes.extraSmall,
-                    color = MaterialTheme.colorScheme.surfaceVariant
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 8.dp).height(40.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.DateRange,
+                            imageVector = Icons.Filled.BarChart,
                             contentDescription = null,
                             tint = CyanBlue,
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = stringResource(R.string.history_month_label, selectedMonth),
-                            style = MaterialTheme.typography.labelSmall,
+                            text = stringResource(R.string.history_monthly_daily_chart_title),
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                }
-            }
 
-            // Tooltip xem chi tiết khi chạm cột
-            if (selectedDayLog != null) {
-                val displayWh = if (selectedDayLog.totalWh >= 1000) {
-                    String.format(Locale.US, "%.2f kWh", selectedDayLog.totalWh / 1000f)
-                } else {
-                    "${selectedDayLog.totalWh} Wh"
+                    // Nút chọn tháng
+                    Surface(
+                        onClick = onSelectMonthClick,
+                        shape = MaterialTheme.shapes.extraSmall,
+                        color = MaterialTheme.colorScheme.surfaceVariant
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.DateRange,
+                                contentDescription = null,
+                                tint = CyanBlue,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.history_month_label, selectedMonth),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
                 }
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = stringResource(R.string.history_day_tooltip, selectedDayLog.day, selectedMonth, displayWh),
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = CyanBlue,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        textAlign = TextAlign.Center
-                    )
+
+                // Tooltip hoặc Tổng kWh
+                if (selectedDayLog != null) {
+                    val displayWh = if (selectedDayLog.totalWh >= 1000) {
+                        String.format(Locale.US, "%.2f kWh", selectedDayLog.totalWh / 1000f)
+                    } else {
+                        "${selectedDayLog.totalWh} Wh"
+                    }
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = stringResource(R.string.history_day_tooltip, selectedDayLog.day, selectedMonth, displayWh),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = CyanBlue,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = Color.Transparent,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val totalWh = dailyLogs.sumOf { it.totalWh }
+                        val displayWh = if (totalWh >= 1000) String.format(Locale.US, "%.2f kWh", totalWh / 1000f) else "$totalWh Wh"
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(start = 4.dp, top = 6.dp, bottom = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.history_unit_kwh),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                text = stringResource(R.string.history_total, displayWh),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
 

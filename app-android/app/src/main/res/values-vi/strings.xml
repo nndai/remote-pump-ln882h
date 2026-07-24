@@ -79,6 +79,9 @@
     <string name="history_hour_tooltip">Giờ %s: %d Wh</string>
     <string name="history_monthly_chart_title">TIÊU THỤ HÀNG THÁNG</string>
     <string name="history_unit_kwh">Đơn vị: kWh</string>
+    <string name="history_unit_wh">Đơn vị: Wh</string>
+    <string name="history_total">Tổng: %s</string>
+    <string name="history_times">(%d lần)</string>
     <string name="history_monthly_daily_chart_title">TIÊU THỤ TRONG THÁNG</string>
     <string name="history_month_label">Tháng %s</string>
     <string name="history_day_tooltip">Ngày %d/%s: %s</string>
