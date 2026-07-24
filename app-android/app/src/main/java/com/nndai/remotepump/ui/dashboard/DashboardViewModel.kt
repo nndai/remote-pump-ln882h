@@ -3,6 +3,7 @@ package com.nndai.remotepump.ui.dashboard
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.nndai.remotepump.R
 import com.nndai.remotepump.data.di.PumpRepositoryProvider
 import com.nndai.remotepump.data.model.ConnectionState
 import com.nndai.remotepump.data.model.PumpStatus
@@ -43,16 +44,19 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                         toggleTimeoutJob?.cancel()
                         _isToggling.value = false
                         if (event.success) {
-                            _messages.tryEmit(if (event.message == "on") "Pump turned ON" else "Pump turned OFF")
+                            _messages.tryEmit(
+                                if (event.message == "on") getApplication<Application>().getString(R.string.pump_turned_on)
+                                else getApplication<Application>().getString(R.string.pump_turned_off)
+                            )
                         } else {
-                            _messages.tryEmit(event.message ?: "Failed to update relay")
+                            _messages.tryEmit(event.message ?: getApplication<Application>().getString(R.string.failed_update_relay))
                         }
                     }
                     "clearPumpFault" -> {
                         if (event.success) {
-                            _messages.tryEmit("Pump fault cleared")
+                            _messages.tryEmit(getApplication<Application>().getString(R.string.pump_fault_cleared))
                         } else {
-                            _messages.tryEmit(event.message ?: "Failed to clear fault")
+                            _messages.tryEmit(event.message ?: getApplication<Application>().getString(R.string.failed_clear_fault))
                         }
                     }
                 }
@@ -80,7 +84,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                 delay(10000L)
                 if (_isToggling.value) {
                     _isToggling.value = false
-                    _messages.tryEmit("Relay toggle timed out (10s)")
+                    _messages.tryEmit(getApplication<Application>().getString(R.string.relay_toggle_timeout))
                 }
             }
 
@@ -89,7 +93,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
             }.onFailure {
                 toggleTimeoutJob?.cancel()
                 _isToggling.value = false
-                _messages.tryEmit("Failed to send toggle command")
+                _messages.tryEmit(getApplication<Application>().getString(R.string.failed_send_toggle))
             }
         }
     }

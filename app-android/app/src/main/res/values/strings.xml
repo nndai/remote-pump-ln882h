@@ -1,3 +1,78 @@
 <resources>
     <string name="app_name">Remote Pump</string>
+
+    <!-- Dashboard - Fault Dialogs -->
+    <string name="fault_dry_run_title">DRY RUN WARNING</string>
+    <string name="fault_dry_run_desc">Dry run detected! Pump has automatically cut off relay to protect motor from damage.</string>
+    <string name="fault_critical_current_title">CRITICAL CURRENT WARNING</string>
+    <string name="fault_critical_current_desc">Current exceeds maximum threshold! Pump has emergency stopped to prevent system damage.</string>
+    <string name="fault_overload_title">OVERLOAD WARNING</string>
+    <string name="fault_overload_desc">Motor overload detected! System has cut power to prevent fire hazard.</string>
+    <string name="fault_generic_title">FAULT WARNING</string>
+    <string name="fault_generic_desc">Hazardous fault detected on the pump system.</string>
+
+    <!-- Dashboard - Fault Dialog Buttons -->
+    <string name="close">Close</string>
+    <string name="clear_fault">Clear Fault</string>
+
+    <!-- Dashboard - Relay Status -->
+    <string name="relay_on">ON</string>
+    <string name="relay_off">OFF</string>
+    <string name="relay_status">Relay</string>
+
+    <!-- Dashboard - Pump/Switch State -->
+    <string name="pump_state_title">PUMP STATE</string>
+    <string name="switch_state_title">SWITCH STATE</string>
+
+    <!-- Dashboard - Pump State Labels -->
+    <string name="pump_state_off">OFF</string>
+    <string name="pump_state_running_ok">RUNNING OK</string>
+    <string name="pump_state_high_current">HIGH CURRENT</string>
+    <string name="pump_state_dry_run">DRY RUN</string>
+    <string name="pump_state_critical_current">CRITICAL CURRENT</string>
+    <string name="pump_state_overload">OVERLOAD</string>
+
+    <!-- Dashboard - Metrics -->
+    <string name="metric_current">Current</string>
+    <string name="metric_power">Power</string>
+    <string name="metric_voltage">Voltage</string>
+    <string name="metric_apparent_power">Apparent Power</string>
+    <string name="metric_power_factor">Power Factor</string>
+    <string name="metric_energy">Energy</string>
+    <string name="metric_temperature">Temperature</string>
+    <string name="metric_rssi">RSSI</string>
+
+    <!-- Dashboard - Control Section -->
+    <string name="pump_control">PUMP CONTROL</string>
+    <string name="switch_control">SWITCH CONTROL</string>
+
+    <!-- Dashboard - ViewModel Messages -->
+    <string name="pump_turned_on">Pump turned ON</string>
+    <string name="pump_turned_off">Pump turned OFF</string>
+    <string name="failed_update_relay">Failed to update relay</string>
+    <string name="pump_fault_cleared">Pump fault cleared</string>
+    <string name="failed_clear_fault">Failed to clear fault</string>
+    <string name="relay_toggle_timeout">Relay toggle timed out (10s)</string>
+    <string name="failed_send_toggle">Failed to send toggle command</string>
+
+    <!-- Pump Control Button -->
+    <string name="pump_btn_turn_off_desc">Turn Off</string>
+    <string name="pump_btn_turn_on_desc">Turn On</string>
+    <string name="pump_btn_processing">PROCESSING...</string>
+    <string name="pump_btn_turn_off_relay">TURN OFF RELAY</string>
+    <string name="pump_btn_turn_on_relay">TURN ON RELAY</string>
+
+    <!-- Language Selector -->
+    <string name="language">Language</string>
+    <string name="lang_en">English</string>
+    <string name="lang_vi">Tiếng Việt</string>
+
+    <!-- Connection Banner -->
+    <string name="conn_connected">Connected to Device</string>
+    <string name="conn_connected_via">Connected to Device via %s</string>
+    <string name="conn_transport_ready">Connected to %s, handshaking...</string>
+    <string name="conn_connecting">Connecting...</string>
+    <string name="conn_disconnected">Disconnected - Tap to retry</string>
+    <string name="conn_failed">Connection failed - Tap to retry</string>
+    <string name="conn_idle">Idle</string>
 </resources>

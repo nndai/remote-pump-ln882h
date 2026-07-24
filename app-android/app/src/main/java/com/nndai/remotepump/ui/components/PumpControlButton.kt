@@ -31,8 +31,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.nndai.remotepump.R
 import com.nndai.remotepump.ui.theme.DimText
 import com.nndai.remotepump.ui.theme.ElevatedSurface
 import com.nndai.remotepump.ui.theme.GreenOk
@@ -111,14 +113,18 @@ fun PumpControlButton(
             } else {
                 Icon(
                     imageVector = if (isOn) Icons.Filled.Power else Icons.Filled.PowerOff,
-                    contentDescription = if (isOn) "Turn Off" else "Turn On",
+                    contentDescription = if (isOn) stringResource(R.string.pump_btn_turn_off_desc) else stringResource(R.string.pump_btn_turn_on_desc),
                     tint = iconColor,
                     modifier = Modifier.size(40.dp)
                 )
             }
         }
         Text(
-            text = if (isLoading) "PROCESSING..." else if (isOn) "TURN OFF RELAY" else "TURN ON RELAY",
+            text = when {
+                isLoading -> stringResource(R.string.pump_btn_processing)
+                isOn -> stringResource(R.string.pump_btn_turn_off_relay)
+                else -> stringResource(R.string.pump_btn_turn_on_relay)
+            },
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
             color = if (isOn) activeColor else DimText

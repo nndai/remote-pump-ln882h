@@ -65,17 +65,22 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import android.app.Activity
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.nndai.remotepump.R
 import com.nndai.remotepump.data.di.PumpRepositoryProvider
 import com.nndai.remotepump.ui.components.CompactTextField
 import com.nndai.remotepump.ui.components.ConfirmDialog
 import com.nndai.remotepump.ui.components.SectionHeader
+import com.nndai.remotepump.util.LocaleHelper
 import kotlinx.coroutines.delay
 
 private data class PendingFieldChange(
@@ -1114,6 +1119,44 @@ fun SettingsScreen(
                     }
                 }
             )
+
+            // ── Language Selector ──
+            SectionHeader(title = stringResource(R.string.language))
+            val context = LocalContext.current
+            val currentLangCode = remember { LocaleHelper.getLanguageCode(context) }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                listOf("en" to stringResource(R.string.lang_en), "vi" to stringResource(R.string.lang_vi)).forEach { (code, name) ->
+                    val selected = currentLangCode == code
+                    Surface(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(MaterialTheme.shapes.small)
+                            .clickable {
+                                if (code != currentLangCode) {
+                                    LocaleHelper.setLanguageCode(context, code)
+                                    (context as? Activity)?.recreate()
+                                }
+                            },
+                        shape = MaterialTheme.shapes.small,
+                        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                    ) {
+                        Box(
+                            modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = name,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+            }
 
             // ── Danger Zone ──
             SectionHeader(title = "Danger Zone")

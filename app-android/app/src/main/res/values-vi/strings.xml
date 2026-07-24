@@ -1,0 +1,78 @@
+<resources>
+    <string name="app_name">Remote Pump</string>
+
+    <!-- Dashboard - Fault Dialogs -->
+    <string name="fault_dry_run_title">CẢNH BÁO: KHÔ NƯỚC</string>
+    <string name="fault_dry_run_desc">Phát hiện chạy khô không có nước! Bơm đã tự động ngắt relay để bảo vệ động cơ khỏi cháy hỏng.</string>
+    <string name="fault_critical_current_title">CẢNH BÁO: DÒNG ĐIỆN CỰC CAO</string>
+    <string name="fault_critical_current_desc">Dòng điện vượt quá ngưỡng cực đại cho phép! Bơm đã ngắt khẩn cấp để tránh hư hỏng hệ thống.</string>
+    <string name="fault_overload_title">CẢNH BÁO: QUÁ TẢI BƠM</string>
+    <string name="fault_overload_desc">Phát hiện motor bị quá tải! Hệ thống đã ngắt điện để phòng tránh chập cháy.</string>
+    <string name="fault_generic_title">CẢNH BÁO SỰ CỐ</string>
+    <string name="fault_generic_desc">Phát hiện lỗi nguy hại trên hệ thống bơm.</string>
+
+    <!-- Dashboard - Fault Dialog Buttons -->
+    <string name="close">Đóng</string>
+    <string name="clear_fault">Xóa lỗi</string>
+
+    <!-- Dashboard - Relay Status -->
+    <string name="relay_on">ON</string>
+    <string name="relay_off">OFF</string>
+    <string name="relay_status">RELAY</string>
+
+    <!-- Dashboard - Pump/Switch State -->
+    <string name="pump_state_title">TRẠNG THÁI BƠM</string>
+    <string name="switch_state_title">TRẠNG THÁI CÔNG TẮC</string>
+
+    <!-- Dashboard - Pump State Labels -->
+    <string name="pump_state_off">OFF</string>
+    <string name="pump_state_running_ok">ĐANG CHẠY</string>
+    <string name="pump_state_high_current">DÒNG CAO</string>
+    <string name="pump_state_dry_run">KHÔ NƯỚC</string>
+    <string name="pump_state_critical_current">DÒNG CỰC CAO</string>
+    <string name="pump_state_overload">QUÁ TẢI</string>
+
+    <!-- Dashboard - Metrics -->
+    <string name="metric_current">Dòng điện</string>
+    <string name="metric_power">Công suất</string>
+    <string name="metric_voltage">Điện áp</string>
+    <string name="metric_apparent_power">Công suất biểu kiến</string>
+    <string name="metric_power_factor">Hệ số công suất</string>
+    <string name="metric_energy">Điện năng</string>
+    <string name="metric_temperature">Nhiệt độ</string>
+    <string name="metric_rssi">RSSI</string>
+
+    <!-- Dashboard - Control Section -->
+    <string name="pump_control">ĐIỀU KHIỂN BƠM</string>
+    <string name="switch_control">ĐIỀU KHIỂN CÔNG TẮC</string>
+
+    <!-- Dashboard - ViewModel Messages -->
+    <string name="pump_turned_on">Đã bật máy bơm</string>
+    <string name="pump_turned_off">Đã tắt máy bơm</string>
+    <string name="failed_update_relay">Không thể cập nhật relay</string>
+    <string name="pump_fault_cleared">Đã xóa lỗi bơm</string>
+    <string name="failed_clear_fault">Không thể xóa lỗi</string>
+    <string name="relay_toggle_timeout">Hết thời gian chờ chuyển relay (10s)</string>
+    <string name="failed_send_toggle">Không thể gửi lệnh chuyển relay</string>
+
+    <!-- Pump Control Button -->
+    <string name="pump_btn_turn_off_desc">Tắt</string>
+    <string name="pump_btn_turn_on_desc">Bật</string>
+    <string name="pump_btn_processing">ĐANG XỬ LÝ...</string>
+    <string name="pump_btn_turn_off_relay">TẮT RELAY</string>
+    <string name="pump_btn_turn_on_relay">BẬT RELAY</string>
+
+    <!-- Language Selector -->
+    <string name="language">Ngôn ngữ</string>
+    <string name="lang_en">English</string>
+    <string name="lang_vi">Tiếng Việt</string>
+
+    <!-- Connection Banner -->
+    <string name="conn_connected">Đã kết nối</string>
+    <string name="conn_connected_via">Đã kết nối qua %s</string>
+    <string name="conn_transport_ready">Đã kết nối %s, đang bắt tay...</string>
+    <string name="conn_connecting">Đang kết nối...</string>
+    <string name="conn_disconnected">Mất kết nối - Chạm để thử lại</string>
+    <string name="conn_failed">Kết nối thất bại - Chạm để thử lại</string>
+    <string name="conn_idle">Chờ</string>
+</resources>

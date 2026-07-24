@@ -51,11 +51,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.nndai.remotepump.R
 import com.nndai.remotepump.data.model.PumpState
 import com.nndai.remotepump.ui.components.ConnectionBanner
 import com.nndai.remotepump.ui.components.PumpControlButton
@@ -118,20 +120,11 @@ fun DashboardScreen(
 
     // Modal Dialog cho 3 trạng thái latch (DRY_RUN, CRITICAL_CURRENT, OVERLOAD)
     activeFaultDialogState?.let { faultState ->
-        val (faultTitle, faultDesc) = when (faultState) {
-            PumpState.DRY_RUN -> Pair(
-                "CẢNH BÁO: KHÔ NƯỚC",
-                "Phát hiện chạy khô không có nước! Bơm đã tự động ngắt relay để bảo vệ động cơ khỏi cháy hỏng."
-            )
-            PumpState.CRITICAL_CURRENT -> Pair(
-                "CẢNH BÁO: DÒNG ĐIỆN CỰC CAO",
-                "Dòng điện vượt quá ngưỡng cực đại cho phép! Bơm đã ngắt khẩn cấp để tránh hư hỏng hệ thống."
-            )
-            PumpState.OVERLOAD -> Pair(
-                "CẢNH BÁO: QUÁ TẢI BƠM",
-                "Phát hiện motor bị quá tải! Hệ thống đã ngắt điện để phòng tránh chập cháy."
-            )
-            else -> Pair("CẢNH BÁO SỰ CỐ", "Phát hiện lỗi nguy hại trên hệ thống bơm.")
+        val (faultTitleRes, faultDescRes) = when (faultState) {
+            PumpState.DRY_RUN -> Pair(R.string.fault_dry_run_title, R.string.fault_dry_run_desc)
+            PumpState.CRITICAL_CURRENT -> Pair(R.string.fault_critical_current_title, R.string.fault_critical_current_desc)
+            PumpState.OVERLOAD -> Pair(R.string.fault_overload_title, R.string.fault_overload_desc)
+            else -> Pair(R.string.fault_generic_title, R.string.fault_generic_desc)
         }
 
         AlertDialog(
@@ -149,7 +142,7 @@ fun DashboardScreen(
             },
             title = {
                 Text(
-                    text = faultTitle,
+                    text = stringResource(faultTitleRes),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = RedError
@@ -157,7 +150,7 @@ fun DashboardScreen(
             },
             text = {
                 Text(
-                    text = faultDesc,
+                    text = stringResource(faultDescRes),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -179,7 +172,7 @@ fun DashboardScreen(
                         ),
                         shape = MaterialTheme.shapes.small
                     ) {
-                        Text("Đóng")
+                        Text(stringResource(R.string.close))
                     }
 
                     Button(
@@ -191,7 +184,7 @@ fun DashboardScreen(
                         colors = ButtonDefaults.buttonColors(containerColor = RedError),
                         shape = MaterialTheme.shapes.small
                     ) {
-                        Text("Xóa lỗi", fontWeight = FontWeight.Bold, color = Color.White)
+                        Text(stringResource(R.string.clear_fault), fontWeight = FontWeight.Bold, color = Color.White)
                     }
                 }
             },
@@ -253,7 +246,7 @@ fun DashboardScreen(
                             )
                             Column {
                                 Text(
-                                    text = if (isRelayOn) "ON" else "OFF",
+                                    text = if (isRelayOn) stringResource(R.string.relay_on) else stringResource(R.string.relay_off),
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 17.sp
@@ -261,7 +254,7 @@ fun DashboardScreen(
                                     color = if (isRelayOn) GreenOk else SecondaryText
                                 )
                                 Text(
-                                    text = "RELAY STATUS",
+                                    text = stringResource(R.string.relay_status),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -278,7 +271,15 @@ fun DashboardScreen(
                         PumpState.DRY_RUN -> PurpleDryRun
                         PumpState.CRITICAL_CURRENT, PumpState.OVERLOAD -> RedError
                     }
-                    val stateTitle = if (s.pumpMode) "PUMP STATE" else "SWITCH STATE"
+                    val stateTitleRes = if (s.pumpMode) R.string.pump_state_title else R.string.switch_state_title
+                    val stateLabelRes = when (pState) {
+                        PumpState.OFF -> R.string.pump_state_off
+                        PumpState.RUNNING_OK -> R.string.pump_state_running_ok
+                        PumpState.HIGH_CURRENT -> R.string.pump_state_high_current
+                        PumpState.DRY_RUN -> R.string.pump_state_dry_run
+                        PumpState.CRITICAL_CURRENT -> R.string.pump_state_critical_current
+                        PumpState.OVERLOAD -> R.string.pump_state_overload
+                    }
 
                     Surface(
                         modifier = Modifier
@@ -301,7 +302,7 @@ fun DashboardScreen(
                             )
                             Column {
                                 Text(
-                                    text = pState.label,
+                                    text = stringResource(stateLabelRes),
                                     style = MaterialTheme.typography.titleMedium.copy(
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 17.sp
@@ -310,7 +311,7 @@ fun DashboardScreen(
                                     maxLines = 1
                                 )
                                 Text(
-                                    text = stateTitle,
+                                    text = stringResource(stateTitleRes),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -322,52 +323,52 @@ fun DashboardScreen(
                     StatusCard(
                         icon = Icons.Filled.Bolt,
                         value = s.current.formatCurrent(),
-                        label = "Current",
+                        label = stringResource(R.string.metric_current),
                         iconTint = if (s.pumpState == PumpState.OVERLOAD || s.pumpState == PumpState.CRITICAL_CURRENT) RedError else CyanBlue,
                         modifier = Modifier.weight(1f)
                     )
                     StatusCard(
                         icon = Icons.Filled.ElectricalServices,
                         value = s.power.formatPower(),
-                        label = "Power",
+                        label = stringResource(R.string.metric_power),
                         modifier = Modifier.weight(1f)
                     )
                     StatusCard(
                         icon = Icons.Filled.Bolt,
                         value = s.voltage.formatVoltage(),
-                        label = "Voltage",
+                        label = stringResource(R.string.metric_voltage),
                         iconTint = OrangeWarning,
                         modifier = Modifier.weight(1f)
                     )
                     StatusCard(
                         icon = Icons.Filled.FlashOn,
                         value = s.apparent.formatApparentPower(),
-                        label = "Apparent Power",
+                        label = stringResource(R.string.metric_apparent_power),
                         modifier = Modifier.weight(1f)
                     )
                     StatusCard(
                         icon = Icons.Filled.Speed,
                         value = s.pf.formatPf(),
-                        label = "Power Factor",
+                        label = stringResource(R.string.metric_power_factor),
                         modifier = Modifier.weight(1f)
                     )
                     StatusCard(
                         icon = Icons.Filled.EnergySavingsLeaf,
                         value = s.energy.formatEnergy(),
-                        label = "Energy",
+                        label = stringResource(R.string.metric_energy),
                         modifier = Modifier.weight(1f)
                     )
                     StatusCard(
                         icon = Icons.Filled.DeviceThermostat,
                         value = s.temperature.formatTemperature(),
-                        label = "Temperature",
+                        label = stringResource(R.string.metric_temperature),
                         iconTint = if (s.temperature > 60) RedError else OrangeWarning,
                         modifier = Modifier.weight(1f)
                     )
                     StatusCard(
                         icon = Icons.Filled.SignalCellularAlt,
                         value = s.rssi.formatRssi(),
-                        label = "RSSI",
+                        label = stringResource(R.string.metric_rssi),
                         iconTint = when {
                             s.rssi > -50 -> CyanBlue
                             s.rssi > -70 -> OrangeWarning
@@ -436,7 +437,7 @@ fun DashboardScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 Text(
-                    text = if (status?.pumpMode == false) "SWITCH CONTROL" else "PUMP CONTROL",
+                    text = if (status?.pumpMode == false) stringResource(R.string.switch_control) else stringResource(R.string.pump_control),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary

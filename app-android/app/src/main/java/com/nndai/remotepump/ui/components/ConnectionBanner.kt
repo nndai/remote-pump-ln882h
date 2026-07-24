@@ -30,8 +30,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.nndai.remotepump.R
 import com.nndai.remotepump.data.model.ConnectionState
 import com.nndai.remotepump.ui.theme.CyanBlue
 import com.nndai.remotepump.ui.theme.GreenOk
@@ -54,23 +56,28 @@ fun ConnectionBanner(
 
     val (icon, text, color) = when (state) {
         is ConnectionState.Connected -> {
-            val via = if (state.channel.isNotBlank()) " via ${state.channel}" else ""
-            Triple(Icons.Filled.CloudDone, "Connected to Device$via", GreenOk)
+            val via = if (state.channel.isNotBlank()) state.channel else ""
+            Triple(
+                Icons.Filled.CloudDone,
+                if (via.isNotBlank()) stringResource(R.string.conn_connected_via, via)
+                else stringResource(R.string.conn_connected),
+                GreenOk
+            )
         }
         is ConnectionState.TransportReady -> {
-            Triple(Icons.Outlined.Autorenew, "Connected to ${state.channel}, handshaking...", CyanBlue)
+            Triple(Icons.Outlined.Autorenew, stringResource(R.string.conn_transport_ready, state.channel), CyanBlue)
         }
         is ConnectionState.Connecting -> {
-            Triple(Icons.Outlined.Autorenew, "Connecting...", OrangeWarning)
+            Triple(Icons.Outlined.Autorenew, stringResource(R.string.conn_connecting), OrangeWarning)
         }
         is ConnectionState.Disconnected -> {
-            Triple(Icons.Filled.CloudOff, "Disconnected – Tap to retry", RedError)
+            Triple(Icons.Filled.CloudOff, stringResource(R.string.conn_disconnected), RedError)
         }
         is ConnectionState.Failed -> {
-            Triple(Icons.Filled.SyncProblem, "Connection failed – Tap to retry", RedError)
+            Triple(Icons.Filled.SyncProblem, stringResource(R.string.conn_failed), RedError)
         }
         is ConnectionState.Idle -> {
-            Triple(Icons.Filled.CloudOff, "Idle", SecondaryText)
+            Triple(Icons.Filled.CloudOff, stringResource(R.string.conn_idle), SecondaryText)
         }
     }
 
