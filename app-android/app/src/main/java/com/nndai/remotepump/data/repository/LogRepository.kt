@@ -544,27 +544,11 @@ class LogRepository(
     }
 
     private fun mergeWithRealtimeData(parsedLog: DailyEnergyLog): DailyEnergyLog {
-        val todayStr = getTodayDateStr()
-        if (parsedLog.dateStr != todayStr) return parsedLog
-
-        val curHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        val existingLog = _dailyPowerLogs.value[todayStr] ?: return parsedLog
-
-        val existingCurrentHourEnergy = existingLog.hourlyList.find { it.hour == curHour }?.energyWh ?: 0L
-        val parsedCurrentHourEnergy = parsedLog.hourlyList.find { it.hour == curHour }?.energyWh ?: 0L
-
-        // Nếu file log tải về chưa có dữ liệu giờ hiện tại, hoặc dữ liệu realtime lớn hơn,
-        // thì ta giữ lại dữ liệu realtime để không bị ghi đè tụt lùi.
-        if (existingCurrentHourEnergy > parsedCurrentHourEnergy) {
-            val updatedHourlyList = parsedLog.hourlyList.map {
-                if (it.hour == curHour) it.copy(energyWh = existingCurrentHourEnergy)
-                else it
-            }
-            return parsedLog.copy(
-                hourlyList = updatedHourlyList,
-                totalWh = updatedHourlyList.sumOf { it.energyWh }
-            )
-        }
+        // Dữ liệu từ file log luôn là sự thật cuối cùng cho các giờ đã qua.
+        // Trả về trực tiếp parsedLog để:
+        // 1. Xóa giờ lưu tạm cũ, thay bằng dữ liệu chính thức từ file.
+        // 2. Tự động reset giá trị tạm của giờ mới về 0.
+        // Sau đó getStatus sẽ cập nhật lại giá trị tạm mới vào RAM.
         return parsedLog
     }
 
