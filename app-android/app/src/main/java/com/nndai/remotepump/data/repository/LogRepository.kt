@@ -68,6 +68,7 @@ class LogRepository(
                 when (event) {
                     is PumpCommandEvent.ListDirResult -> handleListDirResult(event)
                     is PumpCommandEvent.ReadFileResult -> handleReadFileResult(event)
+                    is PumpCommandEvent.StatusUpdate -> handleStatusUpdate(event)
                     else -> {}
                 }
             }
@@ -82,6 +83,24 @@ class LogRepository(
         val toggleMap = mutableMapOf<String, List<ToggleLogEvent>>()
         val datesSet = mutableSetOf<String>()
 
+        // 1. Load từ JSON cache trước (có thể chứa dữ liệu realtime đã gộp)
+        prefs.all.forEach { (key, value) ->
+            if (key.startsWith(PREFIX_POWER) && value is String) {
+                val dateStr = key.removePrefix(PREFIX_POWER)
+                val dailyLog = parseCachedPowerJson(dateStr, value)
+                if (dailyLog != null) {
+                    powerMap[dateStr] = dailyLog
+                    datesSet.add(dateStr)
+                }
+            } else if (key.startsWith(PREFIX_TOGGLE) && value is String) {
+                val dateStr = key.removePrefix(PREFIX_TOGGLE)
+                val events = parseCachedToggleJson(value)
+                toggleMap[dateStr] = events
+                datesSet.add(dateStr)
+            }
+        }
+
+        // 2. Chỉ load từ RAW CONTENT nếu chưa có trong JSON (tránh ghi đè dữ liệu realtime đã lưu)
         prefs.all.forEach { (key, value) ->
             if (key.startsWith(KEY_RAW_CONTENT) && value is String && value.isNotEmpty()) {
                 val fullPath = key.removePrefix(KEY_RAW_CONTENT)
@@ -89,30 +108,18 @@ class LogRepository(
                 val dateStr = filename.removeSuffix(".log")
                 if (dateStr.isNotBlank()) {
                     if (fullPath.contains("/power/")) {
-                        val dailyLog = parsePowerLogData(dateStr, value)
-                        powerMap[dateStr] = dailyLog
-                        datesSet.add(dateStr)
+                        if (!powerMap.containsKey(dateStr)) {
+                            val dailyLog = parsePowerLogData(dateStr, value)
+                            powerMap[dateStr] = dailyLog
+                            datesSet.add(dateStr)
+                        }
                     } else if (fullPath.contains("/toggle/")) {
-                        val events = parseToggleLogData(value)
-                        toggleMap[dateStr] = events
-                        datesSet.add(dateStr)
+                        if (!toggleMap.containsKey(dateStr)) {
+                            val events = parseToggleLogData(value)
+                            toggleMap[dateStr] = events
+                            datesSet.add(dateStr)
+                        }
                     }
-                }
-            } else if (key.startsWith(PREFIX_POWER) && value is String) {
-                val dateStr = key.removePrefix(PREFIX_POWER)
-                if (!powerMap.containsKey(dateStr)) {
-                    val dailyLog = parseCachedPowerJson(dateStr, value)
-                    if (dailyLog != null) {
-                        powerMap[dateStr] = dailyLog
-                        datesSet.add(dateStr)
-                    }
-                }
-            } else if (key.startsWith(PREFIX_TOGGLE) && value is String) {
-                val dateStr = key.removePrefix(PREFIX_TOGGLE)
-                if (!toggleMap.containsKey(dateStr)) {
-                    val events = parseCachedToggleJson(value)
-                    toggleMap[dateStr] = events
-                    datesSet.add(dateStr)
                 }
             }
         }
@@ -130,6 +137,17 @@ class LogRepository(
         scope.launch {
             if (_isSyncing.value) return@launch
             _isSyncing.value = true
+
+            // Đặt timeout 30s để tự động tắt trạng thái quay (isSyncing) nếu không nhận được phản hồi
+            scope.launch {
+                kotlinx.coroutines.delay(30_000)
+                if (_isSyncing.value) {
+                    Log.w(TAG, "Sync timeout! Resetting isSyncing to false.")
+                    _isSyncing.value = false
+                    activePowerListDirReqId = null
+                    activeToggleListDirReqId = null
+                }
+            }
 
             if (force) {
                 Log.d(TAG, "syncLogs() - FORCE SYNC for both power and toggle")
@@ -245,7 +263,8 @@ class LogRepository(
                     if (savedContent.isNotEmpty()) {
                         val dateStr = entry.name.removeSuffix(".log")
                         val dailyLog = parsePowerLogData(dateStr, savedContent)
-                        savePowerLogToCache(dailyLog)
+                        val finalLog = mergeWithRealtimeData(dailyLog)
+                        savePowerLogToCache(finalLog)
                     }
                 }
             }
@@ -356,7 +375,8 @@ class LogRepository(
 
         if (fullPath.contains("/power/")) {
             val dailyLog = parsePowerLogData(dateStr, fullContent)
-            savePowerLogToCache(dailyLog)
+            val finalLog = mergeWithRealtimeData(dailyLog)
+            savePowerLogToCache(finalLog)
         } else if (fullPath.contains("/toggle/")) {
             val toggleEvents = parseToggleLogData(fullContent)
             saveToggleLogToCache(dateStr, toggleEvents)
@@ -521,6 +541,63 @@ class LogRepository(
             // Ignore format error
         }
         return list
+    }
+
+    private fun mergeWithRealtimeData(parsedLog: DailyEnergyLog): DailyEnergyLog {
+        val todayStr = getTodayDateStr()
+        if (parsedLog.dateStr != todayStr) return parsedLog
+
+        val curHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        val existingLog = _dailyPowerLogs.value[todayStr] ?: return parsedLog
+
+        val existingCurrentHourEnergy = existingLog.hourlyList.find { it.hour == curHour }?.energyWh ?: 0L
+        val parsedCurrentHourEnergy = parsedLog.hourlyList.find { it.hour == curHour }?.energyWh ?: 0L
+
+        // Nếu file log tải về chưa có dữ liệu giờ hiện tại, hoặc dữ liệu realtime lớn hơn,
+        // thì ta giữ lại dữ liệu realtime để không bị ghi đè tụt lùi.
+        if (existingCurrentHourEnergy > parsedCurrentHourEnergy) {
+            val updatedHourlyList = parsedLog.hourlyList.map {
+                if (it.hour == curHour) it.copy(energyWh = existingCurrentHourEnergy)
+                else it
+            }
+            return parsedLog.copy(
+                hourlyList = updatedHourlyList,
+                totalWh = updatedHourlyList.sumOf { it.energyWh }
+            )
+        }
+        return parsedLog
+    }
+
+    private fun handleStatusUpdate(event: PumpCommandEvent.StatusUpdate) {
+        val realtimeEnergyWh = event.status.hourlyEnergy.toLong()
+        if (realtimeEnergyWh <= 0L) return
+
+        val todayStr = getTodayDateStr()
+        val curHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+
+        val currentMap = _dailyPowerLogs.value
+        val originalDailyLog = currentMap[todayStr] ?: DailyEnergyLog(
+            dateStr = todayStr,
+            totalWh = 0L,
+            hourlyList = (0..23).map { HourlyEnergyLog(it, 0L) },
+            isCompleteDay = false
+        )
+
+        val currentStoredEnergy = originalDailyLog.hourlyList.find { it.hour == curHour }?.energyWh ?: 0L
+
+        // Chỉ cập nhật nếu giá trị realtime lớn hơn giá trị đang lưu 
+        // (tránh trường hợp ghi đè bằng 0 khi thiết bị vừa chuyển sang giờ mới nhưng app chưa kịp tải file log)
+        if (realtimeEnergyWh > currentStoredEnergy) {
+            val updatedHourlyList = originalDailyLog.hourlyList.map {
+                if (it.hour == curHour) it.copy(energyWh = realtimeEnergyWh)
+                else it
+            }
+            val updatedDailyLog = originalDailyLog.copy(
+                hourlyList = updatedHourlyList,
+                totalWh = updatedHourlyList.sumOf { it.energyWh }
+            )
+            savePowerLogToCache(updatedDailyLog)
+        }
     }
 
     // ── Public Accessors ──
