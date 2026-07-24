@@ -51,6 +51,8 @@ sealed interface PumpCommandEvent {
     data class ListDirResult(
         val path: String,
         val entries: List<RemoteFileEntry>,
+        val total: Int = 0,
+        val more: Boolean = false,
         val success: Boolean,
         val message: String? = null,
         val reqId: String? = null

@@ -119,9 +119,15 @@ class PumpCommandDataSource(
 
     fun generateReqId(): String = "r_${System.currentTimeMillis()}_${(1000..9999).random()}"
 
-    suspend fun listDir(path: String, customReqId: String? = null): String {
+    suspend fun listDir(path: String, offset: Long = 0, limit: Long = 0, customReqId: String? = null): String {
         val reqId = customReqId ?: generateReqId()
-        sendCommand("listDir", JSONObject().apply { put("path", path) }, reqId = reqId)
+        sendCommand("listDir", JSONObject().apply {
+            put("path", path)
+            if (limit > 0) {
+                put("offset", offset)
+                put("limit", limit)
+            }
+        }, reqId = reqId)
         return reqId
     }
 
@@ -403,10 +409,14 @@ class PumpCommandDataSource(
                 )
             }
         }
+        val total = json.optInt("total", entriesList.size)
+        val more = json.optBoolean("more", false)
         _events.tryEmit(
             PumpCommandEvent.ListDirResult(
                 path = path,
                 entries = entriesList,
+                total = total,
+                more = more,
                 success = success,
                 message = if (!success) json.optString("message", "List dir failed") else null,
                 reqId = reqId

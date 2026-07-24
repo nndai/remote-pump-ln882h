@@ -6,6 +6,7 @@ import android.util.Log
 import com.nndai.remotepump.data.model.DailyEnergyLog
 import com.nndai.remotepump.data.model.HourlyEnergyLog
 import com.nndai.remotepump.data.model.MonthlyEnergyLog
+import com.nndai.remotepump.data.model.RemoteFileEntry
 import com.nndai.remotepump.data.model.ToggleLogEvent
 import com.nndai.remotepump.data.model.ToggleSource
 import com.nndai.remotepump.data.remote.PumpCommandDataSource
@@ -29,6 +30,12 @@ private data class FileReadSession(
     val reqId: String,
     val expectedOffset: Long,
     val requestedAt: Long = System.currentTimeMillis()
+)
+
+private data class DirListPageState(
+    val pendingEntries: MutableList<RemoteFileEntry> = mutableListOf(),
+    var currentOffset: Int = 0,
+    var expectedTotal: Int = 0
 )
 
 /**
@@ -56,9 +63,8 @@ class LogRepository(
 
     private val pendingFileBuffers = mutableMapOf<String, StringBuilder>()
 
-    // Theo dõi reqId chủ động của máy này
-    private var activeToggleListDirReqId: String? = null
-    private var activePowerListDirReqId: String? = null
+    private val activeListDirReqIds = mutableSetOf<String>()
+    private val pendingDirPages = mutableMapOf<String, DirListPageState>()
     private val activeReadFileSessions = mutableMapOf<String, FileReadSession>()
 
     init {
@@ -131,7 +137,8 @@ class LogRepository(
 
     /**
      * Bắt đầu đồng bộ danh sách file từ thiết bị (/logs/power/ và /logs/toggle/).
-     * Kèm reqId độc quyền của điện thoại hiện tại.
+     * Hỗ trợ pagination: tự động lấy các trang tiếp theo nếu response có more=true.
+     * Tự động restart nếu total thay đổi giữa các trang.
      */
     fun syncLogs(force: Boolean = false) {
         scope.launch {
@@ -144,15 +151,15 @@ class LogRepository(
                 if (_isSyncing.value) {
                     Log.w(TAG, "Sync timeout! Resetting isSyncing to false.")
                     _isSyncing.value = false
-                    activePowerListDirReqId = null
-                    activeToggleListDirReqId = null
+                    activeListDirReqIds.clear()
+                    pendingDirPages.clear()
                 }
             }
 
             if (force) {
                 Log.d(TAG, "syncLogs() - FORCE SYNC for both power and toggle")
-                activeToggleListDirReqId = remote.listDir("/logs/toggle/")
-                activePowerListDirReqId = remote.listDir("/logs/power/")
+                requestDirPage("/logs/toggle/", 0)
+                requestDirPage("/logs/power/", 0)
                 return@launch
             }
 
@@ -196,51 +203,91 @@ class LogRepository(
                 "syncLogs() - sending listDir with unique reqId, shouldCheckPower=$shouldCheckPower"
             )
 
-            // Gửi reqId độc quyền cho toggle listDir
-            activeToggleListDirReqId = remote.listDir("/logs/toggle/")
+            requestDirPage("/logs/toggle/", 0)
 
-            // Chỉ listDir power khi đúng thời gian
             if (shouldCheckPower) {
-                activePowerListDirReqId = remote.listDir("/logs/power/")
+                requestDirPage("/logs/power/", 0)
             } else {
                 Log.d(TAG, "syncLogs() - Skip power listDir because time check rule is not met yet")
             }
         }
     }
 
+    private suspend fun requestDirPage(path: String, offset: Int) {
+        val reqId = remote.listDir(path, offset = offset.toLong(), limit = DIR_LIST_PAGE_LIMIT.toLong())
+        activeListDirReqIds += reqId
+        if (offset == 0) {
+            pendingDirPages[path] = DirListPageState()
+        }
+    }
+
     private fun handleListDirResult(event: PumpCommandEvent.ListDirResult) {
         if (!event.success) {
             Log.e(TAG, "ListDir failed for ${event.path}: ${event.message}")
+            activeListDirReqIds.remove(event.reqId)
+            pendingDirPages.remove(event.path)
             _isSyncing.value = false
             return
         }
 
-        // Bắt buộc phải có reqId và reqId phải khớp với reqId mà máy này đã phát đi
-        if (event.reqId.isNullOrEmpty()) {
-            Log.w(TAG, "Ignoring listDir response for ${event.path}: reqId is missing")
+        if (event.reqId.isNullOrEmpty() || event.reqId !in activeListDirReqIds) {
+            Log.w(TAG, "Ignoring listDir response for ${event.path}: reqId mismatch or not ours")
             return
         }
 
-        if (event.path.contains("toggle") && event.reqId != activeToggleListDirReqId) {
-            Log.w(TAG, "Ignoring listDir response for toggle: reqId ${event.reqId} != expected $activeToggleListDirReqId")
-            return
-        }
-        if (event.path.contains("power") && event.reqId != activePowerListDirReqId) {
-            Log.w(TAG, "Ignoring listDir response for power: reqId ${event.reqId} != expected $activePowerListDirReqId")
+        val state = pendingDirPages[event.path] ?: run {
+            Log.w(TAG, "Ignoring listDir response for ${event.path}: no active page state")
+            activeListDirReqIds.remove(event.reqId)
             return
         }
 
+        // Phát hiện total thay đổi → restart pagination từ đầu
+        if (state.expectedTotal != 0 && event.total > 0 && event.total != state.expectedTotal) {
+            Log.w(TAG, "Total changed from ${state.expectedTotal} to ${event.total}, restarting pagination for ${event.path}")
+            state.pendingEntries.clear()
+            state.currentOffset = 0
+            state.expectedTotal = event.total
+            activeListDirReqIds.remove(event.reqId)
+            scope.launch {
+                requestDirPage(event.path, 0)
+            }
+            return
+        }
+
+        if (state.expectedTotal == 0 && event.total > 0) {
+            state.expectedTotal = event.total
+        }
+
+        state.pendingEntries.addAll(event.entries)
+
+        // Còn trang → request tiếp
+        if (event.more) {
+            state.currentOffset += DIR_LIST_PAGE_LIMIT
+            activeListDirReqIds.remove(event.reqId)
+            scope.launch {
+                requestDirPage(event.path, state.currentOffset)
+            }
+            return
+        }
+
+        // Hoàn tất tất cả trang → xử lý entries
+        activeListDirReqIds.remove(event.reqId)
+        pendingDirPages.remove(event.path)
+        processDirEntries(event.path, state.pendingEntries)
+    }
+
+    private fun processDirEntries(path: String, entries: List<RemoteFileEntry>) {
         val todayDateStr = getTodayDateStr()
         val cal = Calendar.getInstance()
         val curHour = cal.get(Calendar.HOUR_OF_DAY)
 
-        if (event.path.contains("power")) {
+        if (path.contains("power")) {
             prefs.edit()
                 .putString(KEY_LAST_POWER_CHECK_DATE, todayDateStr)
                 .putInt(KEY_LAST_POWER_CHECK_HOUR, curHour)
                 .apply()
 
-            event.entries.filter { it.name.endsWith(".log") && !it.name.startsWith("nosync") }.forEach { entry ->
+            entries.filter { it.name.endsWith(".log") && !it.name.startsWith("nosync") }.forEach { entry ->
                 val fullPath = "/logs/power/${entry.name}"
                 val deviceSize = entry.size
                 val savedContent = prefs.getString(KEY_RAW_CONTENT + fullPath, "") ?: ""
@@ -268,8 +315,8 @@ class LogRepository(
                     }
                 }
             }
-        } else if (event.path.contains("toggle")) {
-            event.entries.filter { it.name.endsWith(".log") && !it.name.startsWith("nosync") }.forEach { entry ->
+        } else if (path.contains("toggle")) {
+            entries.filter { it.name.endsWith(".log") && !it.name.startsWith("nosync") }.forEach { entry ->
                 val fullPath = "/logs/toggle/${entry.name}"
                 val deviceSize = entry.size
                 val savedContent = prefs.getString(KEY_RAW_CONTENT + fullPath, "") ?: ""
@@ -626,6 +673,7 @@ class LogRepository(
         private const val KEY_RAW_CONTENT = "raw_content_"
         private const val KEY_LAST_POWER_CHECK_DATE = "last_power_check_date"
         private const val KEY_LAST_POWER_CHECK_HOUR = "last_power_check_hour"
+        private const val DIR_LIST_PAGE_LIMIT = 20
 
         fun getTodayDateStr(): String {
             return SimpleDateFormat("dd-MM-yyyy", Locale.US).format(Date())

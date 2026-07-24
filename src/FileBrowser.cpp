@@ -2,8 +2,10 @@
 #include <LittleFS.h>
 #include <ArduinoJson.h>
 #include <mbedtls/base64.h>
+#include <vector>
+#include <algorithm>
 
-String FileBrowser::listDir(const String& path) {
+String FileBrowser::listDir(const String& path, size_t offset, size_t limit) {
     JsonDocument doc;
     doc["status"] = "ok";
     doc["path"] = path;
@@ -17,21 +19,84 @@ String FileBrowser::listDir(const String& path) {
         return out;
     }
 
-    JsonArray entries = doc["entries"].to<JsonArray>();
-    File f = dir.openNextFile();
-    while (f) {
-        JsonObject e = entries.add<JsonObject>();
-        e["name"] = String(f.name());
-        if (f.isDirectory()) {
-            e["type"] = "dir";
-        } else {
-            e["type"] = "file";
-            e["size"] = (unsigned long)f.size();
+    if (limit == 0) {
+        JsonArray entries = doc["entries"].to<JsonArray>();
+        File f = dir.openNextFile();
+        while (f) {
+            JsonObject e = entries.add<JsonObject>();
+            e["name"] = String(f.name());
+            if (f.isDirectory()) {
+                e["type"] = "dir";
+            } else {
+                e["type"] = "file";
+                e["size"] = (unsigned long)f.size();
+            }
+            f.close();
+            f = dir.openNextFile();
         }
-        f.close();
-        f = dir.openNextFile();
+        dir.close();
+        String out;
+        serializeJson(doc, out);
+        return out;
+    }
+
+    struct DirEntry {
+        String name;
+        String type;
+        unsigned long size;
+    };
+    std::vector<DirEntry> all;
+    {
+        File f = dir.openNextFile();
+        while (f) {
+            DirEntry e;
+            e.name = String(f.name());
+            if (f.isDirectory()) {
+                e.type = "dir";
+                e.size = 0;
+            } else {
+                e.type = "file";
+                e.size = (unsigned long)f.size();
+            }
+            all.push_back(e);
+            f.close();
+            f = dir.openNextFile();
+        }
     }
     dir.close();
+
+    std::sort(all.begin(), all.end(), [](const DirEntry& a, const DirEntry& b) {
+        int da, ma, ya, db, mb, yb;
+        bool aOk = sscanf(a.name.c_str(), "%d-%d-%d", &da, &ma, &ya) == 3;
+        bool bOk = sscanf(b.name.c_str(), "%d-%d-%d", &db, &mb, &yb) == 3;
+        if (!aOk && !bOk) return a.name < b.name;
+        if (!aOk) return true;
+        if (!bOk) return false;
+        if (ya != yb) return ya < yb;
+        if (ma != mb) return ma < mb;
+        return da < db;
+    });
+
+    size_t total = all.size();
+    doc["total"] = (unsigned long)total;
+
+    if (offset >= total) {
+        doc["entries"] = JsonArray();
+        doc["more"] = false;
+    } else {
+        size_t end = offset + limit;
+        if (end > total) end = total;
+        doc["more"] = (end < total);
+        JsonArray entries = doc["entries"].to<JsonArray>();
+        for (size_t i = offset; i < end; i++) {
+            JsonObject e = entries.add<JsonObject>();
+            e["name"] = all[i].name;
+            e["type"] = all[i].type;
+            if (all[i].type == "file") {
+                e["size"] = all[i].size;
+            }
+        }
+    }
 
     String out;
     serializeJson(doc, out);

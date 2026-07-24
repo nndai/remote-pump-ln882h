@@ -998,7 +998,9 @@ void CommandHandler::_handleFileCommand(const String& source, const String& cmd,
 
     String json;
     if (cmd == "listDir") {
-        json = FileBrowser::listDir(path);
+        size_t offset = payload["offset"] | (unsigned int)0;
+        size_t limit = payload["limit"] | (unsigned int)0;
+        json = FileBrowser::listDir(path, offset, limit);
     }
     else if (cmd == "fileInfo") {
         json = FileBrowser::fileInfo(path);
