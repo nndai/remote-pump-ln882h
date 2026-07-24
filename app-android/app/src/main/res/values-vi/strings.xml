@@ -108,6 +108,14 @@
         <item>Tháng 12</item>
     </string-array>
 
+    <!-- Log Screen -->
+    <string name="log_title">Device Logs</string>
+    <string name="log_clear_logs">Xóa log</string>
+    <string name="log_listening">Đang nghe...</string>
+    <string name="log_off">Tắt</string>
+    <string name="log_raw_json_hint">Nhập raw JSON (ví dụ: {"cmd":"getStatus"})</string>
+    <string name="log_send">Gửi</string>
+
     <!-- Language Selector -->
     <string name="language">Ngôn ngữ</string>
     <string name="lang_en">English</string>

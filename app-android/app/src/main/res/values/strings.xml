@@ -108,6 +108,14 @@
         <item>December</item>
     </string-array>
 
+    <!-- Log Screen -->
+    <string name="log_title">Device Logs</string>
+    <string name="log_clear_logs">Clear logs</string>
+    <string name="log_listening">Listening...</string>
+    <string name="log_off">Off</string>
+    <string name="log_raw_json_hint">Enter raw JSON (e.g. {"cmd":"getStatus"})</string>
+    <string name="log_send">Send</string>
+
     <!-- Language Selector -->
     <string name="language">Language</string>
     <string name="lang_en">English</string>

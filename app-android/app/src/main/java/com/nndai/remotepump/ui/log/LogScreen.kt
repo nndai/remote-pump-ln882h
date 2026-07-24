@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -54,6 +55,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.ime
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.coerceAtLeast
+import com.nndai.remotepump.R
 
 @Composable
 fun LogScreen(
@@ -98,7 +100,7 @@ fun LogScreen(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "Device Logs",
+                    text = stringResource(R.string.log_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -118,13 +120,13 @@ fun LogScreen(
                     IconButton(onClick = { viewModel.clearLogs() }) {
                         Icon(
                             imageVector = Icons.Filled.Delete,
-                            contentDescription = "Clear logs",
+                            contentDescription = stringResource(R.string.log_clear_logs),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
                 Text(
-                    text = if (isEnabled) "Listening..." else "Off",
+                    text = if (isEnabled) stringResource(R.string.log_listening) else stringResource(R.string.log_off),
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -175,7 +177,7 @@ fun LogScreen(
                 modifier = Modifier.weight(1f),
                 placeholder = {
                     Text(
-                        text = "Nhập raw JSON (ví dụ: {\"cmd\":\"getStatus\"})",
+                        text = stringResource(R.string.log_raw_json_hint),
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
                     )
@@ -209,11 +211,11 @@ fun LogScreen(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Send,
-                    contentDescription = "Send",
+                    contentDescription = stringResource(R.string.log_send),
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("Gửi", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.log_send), fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
         }
 
