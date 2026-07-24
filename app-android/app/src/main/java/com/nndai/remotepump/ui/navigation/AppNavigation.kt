@@ -44,6 +44,7 @@ import com.nndai.remotepump.R
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.material.icons.filled.Terminal
 
 /**
  * Định nghĩa các route cho bottom navigation.
@@ -58,7 +59,7 @@ sealed class Screen(
     data object History : Screen("history", R.string.nav_history, Icons.Filled.BarChart, Icons.Outlined.BarChart)
     data object Settings : Screen("settings", R.string.nav_settings, Icons.Filled.Settings, Icons.Outlined.Settings)
     data object DeviceInfo : Screen("device_info", R.string.nav_system, Icons.Filled.Info, Icons.Outlined.Info)
-    data object Log : Screen("log", R.string.nav_log, Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List)
+    data object Log : Screen("log", R.string.nav_log, Icons.Filled.Terminal, Icons.Filled.Terminal)
 }
 
 private val screens = listOf(Screen.Dashboard, Screen.History, Screen.Log, Screen.Settings, Screen.DeviceInfo)
