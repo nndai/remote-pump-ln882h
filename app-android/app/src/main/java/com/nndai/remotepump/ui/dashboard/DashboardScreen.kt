@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.DeviceThermostat
+import androidx.compose.material.icons.filled.ElectricMeter
 import androidx.compose.material.icons.filled.ElectricalServices
 import androidx.compose.material.icons.filled.EnergySavingsLeaf
 import androidx.compose.material.icons.filled.FlashOn
@@ -328,7 +329,7 @@ fun DashboardScreen(
                         modifier = Modifier.weight(1f)
                     )
                     StatusCard(
-                        icon = Icons.Filled.ElectricalServices,
+                        icon = Icons.Filled.ElectricMeter,
                         value = s.power.formatPower(),
                         label = stringResource(R.string.metric_power),
                         modifier = Modifier.weight(1f)

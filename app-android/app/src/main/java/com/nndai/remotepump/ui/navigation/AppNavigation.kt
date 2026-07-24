@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -39,6 +40,7 @@ import com.nndai.remotepump.ui.deviceinfo.DeviceInfoScreen
 import com.nndai.remotepump.ui.history.EnergyHistoryScreen
 import com.nndai.remotepump.ui.log.LogScreen
 import com.nndai.remotepump.ui.settings.SettingsScreen
+import com.nndai.remotepump.R
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.isImeVisible
@@ -48,15 +50,15 @@ import androidx.compose.foundation.layout.isImeVisible
  */
 sealed class Screen(
     val route: String,
-    val label: String,
+    val labelResId: Int,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector
 ) {
-    data object Dashboard : Screen("dashboard", "Dashboard", Icons.Filled.Dashboard, Icons.Outlined.Dashboard)
-    data object History : Screen("history", "History", Icons.Filled.BarChart, Icons.Outlined.BarChart)
-    data object Settings : Screen("settings", "Settings", Icons.Filled.Settings, Icons.Outlined.Settings)
-    data object DeviceInfo : Screen("device_info", "System", Icons.Filled.Info, Icons.Outlined.Info)
-    data object Log : Screen("log", "Log", Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List)
+    data object Dashboard : Screen("dashboard", R.string.nav_dashboard, Icons.Filled.Dashboard, Icons.Outlined.Dashboard)
+    data object History : Screen("history", R.string.nav_history, Icons.Filled.BarChart, Icons.Outlined.BarChart)
+    data object Settings : Screen("settings", R.string.nav_settings, Icons.Filled.Settings, Icons.Outlined.Settings)
+    data object DeviceInfo : Screen("device_info", R.string.nav_system, Icons.Filled.Info, Icons.Outlined.Info)
+    data object Log : Screen("log", R.string.nav_log, Icons.AutoMirrored.Filled.List, Icons.AutoMirrored.Outlined.List)
 }
 
 private val screens = listOf(Screen.Dashboard, Screen.History, Screen.Log, Screen.Settings, Screen.DeviceInfo)
@@ -93,12 +95,12 @@ fun AppNavigation() {
                         icon = {
                             Icon(
                                 imageVector = if (selected) screen.selectedIcon else screen.unselectedIcon,
-                                contentDescription = screen.label
+                                contentDescription = stringResource(screen.labelResId)
                             )
                         },
                         label = {
                             Text(
-                                text = screen.label,
+                                text = stringResource(screen.labelResId),
                                 style = MaterialTheme.typography.labelSmall
                             )
                         },

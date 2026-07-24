@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -52,15 +53,16 @@ fun PumpControlButton(
     modifier: Modifier = Modifier
 ) {
     val activeColor = GreenOk
-    val inactiveColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+    val inactiveBgColor = MaterialTheme.colorScheme.surfaceVariant
+    val inactiveBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
 
     val bgColor by animateColorAsState(
-        targetValue = if (isOn) activeColor else ElevatedSurface,
+        targetValue = if (isOn) activeColor else inactiveBgColor,
         animationSpec = tween(350),
         label = "pumpBg"
     )
     val borderColor by animateColorAsState(
-        targetValue = if (isOn) activeColor else inactiveColor,
+        targetValue = if (isOn) activeColor.copy(alpha = 0.5f) else inactiveBorderColor,
         animationSpec = tween(350),
         label = "pumpBorder"
     )
@@ -82,18 +84,21 @@ fun PumpControlButton(
     ) {
         Box(
             modifier = Modifier
-                .size(96.dp)
+                .size(144.dp)
                 .scale(buttonScale)
                 .shadow(
-                    elevation = if (isOn) 14.dp else 4.dp,
+                    elevation = if (isOn) 24.dp else 8.dp,
                     shape = CircleShape,
-                    ambientColor = if (isOn) activeColor.copy(alpha = 0.5f) else ElevatedSurface,
-                    spotColor = if (isOn) activeColor.copy(alpha = 0.7f) else ElevatedSurface
+                    ambientColor = if (isOn) activeColor else Color.Black,
+                    spotColor = if (isOn) activeColor else Color.Black.copy(alpha = 0.2f)
                 )
                 .clip(CircleShape)
                 .background(bgColor)
+                .background(Color.White.copy(alpha = 0.2f),
+
+                )
                 .border(
-                    border = BorderStroke(3.dp, borderColor),
+                    border = BorderStroke(2.dp, borderColor),
                     shape = CircleShape
                 )
                 .clickable(
@@ -106,16 +111,16 @@ fun PumpControlButton(
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(26.dp),
+                    modifier = Modifier.size(40.dp),
                     color = iconColor,
-                    strokeWidth = 3.5.dp
+                    strokeWidth = 5.dp
                 )
             } else {
                 Icon(
                     imageVector = if (isOn) Icons.Filled.Power else Icons.Filled.PowerOff,
                     contentDescription = if (isOn) stringResource(R.string.pump_btn_turn_off_desc) else stringResource(R.string.pump_btn_turn_on_desc),
                     tint = iconColor,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(60.dp)
                 )
             }
         }

@@ -1,9 +1,16 @@
 <resources>
+    <!-- Bottom Navigation -->
+    <string name="nav_dashboard">Trang Chủ</string>
+    <string name="nav_history">Lịch Sử</string>
+    <string name="nav_log">Logs</string>
+    <string name="nav_settings">Cài Đặt</string>
+    <string name="nav_system">Hệ Thống</string>
+
     <string name="app_name">Remote Pump</string>
 
     <!-- Dashboard - Fault Dialogs -->
-    <string name="fault_dry_run_title">CẢNH BÁO: KHÔ NƯỚC</string>
-    <string name="fault_dry_run_desc">Phát hiện chạy khô không có nước! Bơm đã tự động ngắt relay để bảo vệ động cơ khỏi cháy hỏng.</string>
+    <string name="fault_dry_run_title">CẢNH BÁO: HỤT NƯỚC</string>
+    <string name="fault_dry_run_desc">Phát hiện máy bơm chạy khô không có nước - bị hụt nước! Bơm đã tự động ngắt relay để bảo vệ động cơ khỏi cháy hỏng.</string>
     <string name="fault_critical_current_title">CẢNH BÁO: DÒNG ĐIỆN CỰC CAO</string>
     <string name="fault_critical_current_desc">Dòng điện vượt quá ngưỡng cực đại cho phép! Bơm đã ngắt khẩn cấp để tránh hư hỏng hệ thống.</string>
     <string name="fault_overload_title">CẢNH BÁO: QUÁ TẢI BƠM</string>
@@ -13,22 +20,22 @@
 
     <!-- Dashboard - Fault Dialog Buttons -->
     <string name="close">Đóng</string>
-    <string name="clear_fault">Xóa lỗi</string>
+    <string name="clear_fault">Xác nhận</string>
 
     <!-- Dashboard - Relay Status -->
-    <string name="relay_on">ON</string>
-    <string name="relay_off">OFF</string>
-    <string name="relay_status">RELAY</string>
+    <string name="relay_on">ĐANG BẬT</string>
+    <string name="relay_off">ĐANG TẮT</string>
+    <string name="relay_status">Relay</string>
 
     <!-- Dashboard - Pump/Switch State -->
     <string name="pump_state_title">TRẠNG THÁI BƠM</string>
     <string name="switch_state_title">TRẠNG THÁI CÔNG TẮC</string>
 
     <!-- Dashboard - Pump State Labels -->
-    <string name="pump_state_off">OFF</string>
+    <string name="pump_state_off">ĐANG TẮT</string>
     <string name="pump_state_running_ok">ĐANG CHẠY</string>
     <string name="pump_state_high_current">DÒNG CAO</string>
-    <string name="pump_state_dry_run">KHÔ NƯỚC</string>
+    <string name="pump_state_dry_run">HỤT NƯỚC</string>
     <string name="pump_state_critical_current">DÒNG CỰC CAO</string>
     <string name="pump_state_overload">QUÁ TẢI</string>
 
@@ -208,8 +215,8 @@
     <string name="settings_save_local_mqtt">Lưu thông số kết nối MQTT cục bộ?</string>
     <string name="settings_switch_pump_mode">Chuyển sang CHẾ ĐỘ BƠM?</string>
     <string name="settings_switch_switch_mode">Chuyển sang CHẾ ĐỘ CÔNG TẮC?</string>
-    <string name="settings_pump_mode_desc">CHẾ ĐỘ BƠM bật các tính năng bảo vệ thông minh. Nó sẽ tự động tắt relay nếu phát hiện \'Khô nước\' hoặc \'Quá tải\'. Chỉ sử dụng cho máy bơm nước.</string>
-    <string name="settings_switch_mode_desc">CHẾ ĐỘ CÔNG TẮC tắt tất cả bảo vệ thông minh. Thiết bị sẽ hoạt động như công tắc thủ công thông thường.</string>
+    <string name="settings_pump_mode_desc">CHẾ ĐỘ BƠM bật các tính năng bảo vệ thông minh. Nó sẽ tự động tắt relay nếu phát hiện \'Hụt nước\' hoặc \'Dòng cao\'. Chỉ sử dụng cho máy bơm nước.</string>
+    <string name="settings_switch_mode_desc">CHẾ ĐỘ CÔNG TẮC tắt tất cả bảo vệ thông minh cho máy bơm. Thiết bị sẽ hoạt động như công tắc thủ công thông thường.</string>
     <string name="settings_change_relay_mode">Đổi chế độ khởi động Relay?</string>
     <string name="settings_relay_mode_message">Đặt chế độ khởi động relay thành %s?</string>
     <string name="settings_enable_log_title">Bật ghi log hệ thống?</string>
