@@ -18,7 +18,8 @@ CurrentSensor::CurrentSensor()
     , _lastLoopMs(0)
     , _prevCf(0)
     , _prevCf1(0)
-    , _totalWs(0)
+    , _totalHourWs(0)
+    , _totalDayWs(0)
 {
 }
 
@@ -70,26 +71,29 @@ void CurrentSensor::loop() {
         _current = cf1 * _cCal / elapsedSec;
     }
 
-    _power = cf * _pCal / elapsedSec;
-    if (_power < 0.5f) _power = 0;
+    double tmp = cf * _pCal;
 
-    _totalWs += cf * _pCal;
+    _power = tmp / elapsedSec;
+
+    _totalHourWs += tmp;
+    _totalDayWs += tmp;
 
     _measVoltage = !_measVoltage;
     digitalWrite(_selPin, _measVoltage ? HIGH : LOW);
 }
 
 BL0937SensorData CurrentSensor::readAll() {
-    if (!_initialized) return {0, 0, 0, 0, 0, 0};
+    if (!_initialized) return {0, 0, 0, 0, 0, 0, 0};
 
     float voltage = _voltage;
     float current = _current;
     float power = _power;
-    double energy = _totalWs / 3600.0;
+    double dailyEnergy = _totalDayWs / 3600.0;
+    double hourlyEnergy = _totalHourWs / 3600.0;
     float apparent = voltage * current;
     float pf = (apparent > 0) ? power / apparent : 0;
 
-    return {current, voltage, power, apparent, pf, energy};
+    return {current, voltage, power, apparent, pf, hourlyEnergy, dailyEnergy};
 }
 
 void CurrentSensor::calibrateCurrent(double expectedCurrent) {
@@ -123,8 +127,12 @@ void CurrentSensor::resetCalibration() {
     _pCal = EMS_POWER_CAL;
 }
 
-void CurrentSensor::resetEnergy() {
-    _totalWs = 0;
+void CurrentSensor::resetHourlyEnergy() {
+    _totalHourWs = 0;
+}
+
+void CurrentSensor::resetDailyEnergy() {
+    _totalDayWs = 0;
 }
 
 void CurrentSensor::_cfISR() {

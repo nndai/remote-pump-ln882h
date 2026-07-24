@@ -68,6 +68,7 @@ void taskStreamSender(void* pvParams);
 // ── Energy log tracking ──
 static uint32_t s_lastHourEpoch = UINT32_MAX;
 static uint32_t s_hourRefMillis = 0;
+static uint32_t s_lastDayEpoch = UINT32_MAX;
 
 static void setupAP_WS(DeviceConfig& cfg);
 static void setupSTA_MQTT(DeviceConfig& cfg);
@@ -493,25 +494,31 @@ void taskEnergyLog(void* pvParams) {
             uint32_t h = epoch / 3600;
 
             if (h != s_lastHourEpoch && s_lastHourEpoch != UINT32_MAX) {
-                uint32_t wh = currentSensor.getEnergy(); // Wh
+                uint32_t wh = currentSensor.getHourlyEnergy(); // Wh
                 if (wh > 0) {
                     uint8_t label = s_lastHourEpoch % 24;
                     time_t intervalStart = (time_t)s_lastHourEpoch * 3600;
                     logManager.logHourlyPower(label, wh, intervalStart);
                     logManager.addTotalPower(wh);
                 }
-                currentSensor.resetEnergy();
+                currentSensor.resetHourlyEnergy();
             }
             s_lastHourEpoch = h;
             s_hourRefMillis = millis();
+
+            uint32_t d = epoch / 86400;
+            if (d != s_lastDayEpoch && s_lastDayEpoch != UINT32_MAX) {
+                currentSensor.resetDailyEnergy();
+            }
+            s_lastDayEpoch = d;
         }
         else {
             if (millis() - s_hourRefMillis >= 3600000UL) {
-                uint32_t wh = currentSensor.getEnergy(); // Wh
+                uint32_t wh = currentSensor.getHourlyEnergy(); // Wh
                 if (wh > 0) {
                     logManager.addTotalPower(wh);
                 }
-                currentSensor.resetEnergy();
+                currentSensor.resetHourlyEnergy();
                 s_hourRefMillis = millis();
             }
         }

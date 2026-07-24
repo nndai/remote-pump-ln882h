@@ -13,7 +13,8 @@ struct BL0937SensorData {
     float power;         // W
     float apparent;      // VA
     float pf;
-    double energy;       // Wh
+    double hourlyEnergy;   // Wh
+    double dailyEnergy;       // Wh
 };
 
 class CurrentSensor {
@@ -30,13 +31,17 @@ public:
     float getCurrent() const { return _current; } // A
     float getActivePower() const { return _power; } // W
     float getVoltage() const {  return _voltage; } // V
-    double getEnergy() const { return _totalWs / 3600.0; } // Wh
-    float getApparentPower() const { return _voltage * _current; } // VA
+
+    double getDailyEnergy() const { return _totalDayWs / 3600.0; }    // Wh
+    double getHourlyEnergy() const { return _totalHourWs / 3600.0; } // Wh
+
+    float getApparentPower() const { return _voltage * _current; }  // VA
     float getPowerFactor() const {
         float apparent = _voltage * _current;
         return (apparent > 0) ? _power / apparent : 0;
     }
-    void resetEnergy();
+    void resetHourlyEnergy();
+    void resetDailyEnergy();
 
     double getCurrentMultiplier() const { return _cCal; }
     double getVoltageMultiplier() const { return _vCal; }
@@ -75,7 +80,10 @@ private:
     // Delta tracking
     uint32_t _prevCf;
     uint32_t _prevCf1;
-    double _totalWs;
+
+    // Energy tracking
+    double _totalHourWs;
+    double _totalDayWs;
 
     static void _cfISR();
     static void _cf1ISR();

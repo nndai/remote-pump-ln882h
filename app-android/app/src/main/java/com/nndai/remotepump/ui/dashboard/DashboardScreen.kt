@@ -355,7 +355,7 @@ fun DashboardScreen(
                     )
                     StatusCard(
                         icon = Icons.Filled.EnergySavingsLeaf,
-                        value = s.energy.formatEnergy(),
+                        value = s.dailyEnergy.formatEnergy(),
                         label = stringResource(R.string.metric_energy),
                         modifier = Modifier.weight(1f)
                     )

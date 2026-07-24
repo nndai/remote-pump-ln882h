@@ -218,7 +218,8 @@ void CommandHandler::_cmdGetStatus(const String& source, const JsonDocument& pay
     resp["current"] = blData.current;
     resp["power"] = blData.power;
     resp["voltage"] = blData.voltage;
-    resp["energy"] = blData.energy;
+    resp["dailyEnergy"] = blData.dailyEnergy;
+    resp["hourlyEnergy"] = blData.hourlyEnergy;
     resp["apparent"] = blData.apparent;
     resp["pf"] = blData.pf;
     resp["temperature"] = _temp->readCelsius();
@@ -866,10 +867,12 @@ void CommandHandler::_cmdGetSystemInfo(const String& source, const JsonDocument&
     if (has("pump")) {
         JsonObject p = resp["pump"].to<JsonObject>();
         p["relay"] = _pump->isOn();
+        p["voltage"] = _current->getVoltage();
         p["current"] = _current->getCurrent();
         p["power"] = _current->getActivePower();
-        p["voltage"] = _current->getVoltage();
-        p["energy"] = _current->getEnergy();
+        p["apparent"] = _current->getApparentPower();
+        p["dailyEnergy"] = _current->getDailyEnergy();
+        p["hourlyEnergy"] = _current->getHourlyEnergy();
         p["temperature"] = _temp->readCelsius();
         switch (_pump->getState()) {
         case PumpState::OFF:        p["pumpState"] = "off"; break;
