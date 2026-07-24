@@ -123,7 +123,7 @@ fun EnergyHistoryScreen(
         // ── 1. Top Bar Header (Sync Refresh Button) ──
         TopHeaderBar(
             isSyncing = isSyncing,
-            onSyncClick = { viewModel.syncData() }
+            onSyncClick = { viewModel.syncData(force = true) }
         )
 
         // ── 2. Daily Summary Cards ──

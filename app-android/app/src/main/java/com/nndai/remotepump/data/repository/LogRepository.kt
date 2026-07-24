@@ -126,22 +126,52 @@ class LogRepository(
      * Bắt đầu đồng bộ danh sách file từ thiết bị (/logs/power/ và /logs/toggle/).
      * Kèm reqId độc quyền của điện thoại hiện tại.
      */
-    fun syncLogs() {
+    fun syncLogs(force: Boolean = false) {
         scope.launch {
             if (_isSyncing.value) return@launch
             _isSyncing.value = true
 
-            val todayStr = getTodayDateStr()
-            val cal = Calendar.getInstance()
-            val curHour = cal.get(Calendar.HOUR_OF_DAY)
-            val curMin = cal.get(Calendar.MINUTE)
+            if (force) {
+                Log.d(TAG, "syncLogs() - FORCE SYNC for both power and toggle")
+                activeToggleListDirReqId = remote.listDir("/logs/toggle/")
+                activePowerListDirReqId = remote.listDir("/logs/power/")
+                return@launch
+            }
 
-            val lastCheckDate = prefs.getString(KEY_LAST_POWER_CHECK_DATE, "") ?: ""
+            val lastCheckDateStr = prefs.getString(KEY_LAST_POWER_CHECK_DATE, "") ?: ""
             val lastCheckHour = prefs.getInt(KEY_LAST_POWER_CHECK_HOUR, -1)
 
-            val shouldCheckPower = (todayStr != lastCheckDate) ||
-                    (curHour > lastCheckHour && curMin >= 1) ||
-                    !_dailyPowerLogs.value.containsKey(todayStr)
+            var shouldCheckPower = false
+
+            if (lastCheckDateStr.isEmpty() || lastCheckHour == -1) {
+                shouldCheckPower = true
+            } else {
+                val sdf = SimpleDateFormat("dd-MM-yyyy", Locale.US)
+                try {
+                    val lastDate = sdf.parse(lastCheckDateStr)
+                    if (lastDate != null) {
+                        val cal = Calendar.getInstance()
+                        cal.time = lastDate
+                        cal.set(Calendar.HOUR_OF_DAY, lastCheckHour)
+                        cal.set(Calendar.MINUTE, 0)
+                        cal.set(Calendar.SECOND, 0)
+                        cal.set(Calendar.MILLISECOND, 0)
+
+                        // Giờ check tiếp theo = giờ check lần trước + 1h + 1m
+                        cal.add(Calendar.HOUR_OF_DAY, 1)
+                        cal.add(Calendar.MINUTE, 1)
+
+                        val targetCheckTime = cal.timeInMillis
+                        if (System.currentTimeMillis() >= targetCheckTime) {
+                            shouldCheckPower = true
+                        }
+                    } else {
+                        shouldCheckPower = true
+                    }
+                } catch (e: Exception) {
+                    shouldCheckPower = true
+                }
+            }
 
             Log.d(
                 TAG,

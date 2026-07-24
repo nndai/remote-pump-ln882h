@@ -147,9 +147,9 @@ class EnergyHistoryViewModel(application: Application) : AndroidViewModel(applic
         _selectedHalfMonthDate.value = monthStr
     }
 
-    fun syncData() {
+    fun syncData(force: Boolean = false) {
         viewModelScope.launch {
-            logRepository.syncLogs()
+            logRepository.syncLogs(force)
         }
     }
 }
