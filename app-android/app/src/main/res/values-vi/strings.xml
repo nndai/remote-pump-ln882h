@@ -62,6 +62,52 @@
     <string name="pump_btn_turn_off_relay">TẮT RELAY</string>
     <string name="pump_btn_turn_on_relay">BẬT RELAY</string>
 
+    <!-- History Screen -->
+    <string name="history_title">LỊCH SỬ NĂNG LƯỢNG &amp; THAO TÁC</string>
+    <string name="history_sync">Đồng bộ</string>
+    <string name="history_daily_consumption">Tiêu thụ điện ngày</string>
+    <string name="history_toggle_count_format">%d lần</string>
+    <string name="history_toggle_count_today">Bật/tắt trong ngày</string>
+    <string name="history_daily_chart_title">TIÊU THỤ TRONG NGÀY</string>
+    <string name="history_hour_tooltip">Giờ %s: %d Wh</string>
+    <string name="history_monthly_chart_title">TIÊU THỤ HÀNG THÁNG</string>
+    <string name="history_unit_kwh">Đơn vị: kWh</string>
+    <string name="history_monthly_daily_chart_title">TIÊU THỤ TRONG THÁNG</string>
+    <string name="history_month_label">Tháng %s</string>
+    <string name="history_day_tooltip">Ngày %d/%s: %s</string>
+    <string name="history_toggle_log_title">NHẬT KÝ BẬT TẮT</string>
+    <string name="history_no_toggle_events">Không có ghi nhận thao tác bật/tắt trong ngày này.</string>
+    <string name="history_today">Hôm nay</string>
+    <string name="history_select_date">Chọn ngày</string>
+    <string name="history_select_month">Chọn tháng</string>
+    <string name="history_choose">Chọn</string>
+    <string name="history_cancel">Hủy</string>
+    <string name="history_month_header">Tháng %02d/%04d</string>
+    <string name="history_year_label">Năm %d</string>
+    <string-array name="history_week_days">
+        <item>T2</item>
+        <item>T3</item>
+        <item>T4</item>
+        <item>T5</item>
+        <item>T6</item>
+        <item>T7</item>
+        <item>CN</item>
+    </string-array>
+    <string-array name="history_month_names">
+        <item>Tháng 1</item>
+        <item>Tháng 2</item>
+        <item>Tháng 3</item>
+        <item>Tháng 4</item>
+        <item>Tháng 5</item>
+        <item>Tháng 6</item>
+        <item>Tháng 7</item>
+        <item>Tháng 8</item>
+        <item>Tháng 9</item>
+        <item>Tháng 10</item>
+        <item>Tháng 11</item>
+        <item>Tháng 12</item>
+    </string-array>
+
     <!-- Language Selector -->
     <string name="language">Ngôn ngữ</string>
     <string name="lang_en">English</string>

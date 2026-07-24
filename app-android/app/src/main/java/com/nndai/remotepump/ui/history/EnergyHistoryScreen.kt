@@ -62,6 +62,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -79,6 +81,7 @@ import com.nndai.remotepump.ui.theme.ElevatedSurface
 import com.nndai.remotepump.ui.theme.GreenOk
 import com.nndai.remotepump.ui.theme.OrangeWarning
 import com.nndai.remotepump.ui.theme.RedError
+import com.nndai.remotepump.R
 import com.nndai.remotepump.ui.theme.SecondaryText
 import java.util.Locale
 
@@ -169,7 +172,7 @@ fun EnergyHistoryScreen(
                             color = CyanBlue
                         )
                         Text(
-                            text = "Tiêu thụ điện ngày",
+                            text = stringResource(R.string.history_daily_consumption),
                             style = MaterialTheme.typography.labelSmall,
                             color = SecondaryText
                         )
@@ -199,7 +202,7 @@ fun EnergyHistoryScreen(
                     )
                     Column {
                         Text(
-                            text = "$toggleCount lần",
+                            text = stringResource(R.string.history_toggle_count_format, toggleCount),
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 17.sp
@@ -207,7 +210,7 @@ fun EnergyHistoryScreen(
                             color = GreenOk
                         )
                         Text(
-                            text = "Bật/tắt trong ngày",
+                            text = stringResource(R.string.history_toggle_count_today),
                             style = MaterialTheme.typography.labelSmall,
                             color = SecondaryText
                         )
@@ -254,7 +257,7 @@ fun EnergyHistoryScreen(
     // ── Power Date Picker Dialog ──
     if (showPowerDatePickerDialog) {
         CustomVisualCalendarDialog(
-            title = "Chọn ngày",
+            title = stringResource(R.string.history_select_date),
             selectedDateStr = selectedPowerDate,
             availableDates = availableDates,
             onDateSelected = { dateStr ->
@@ -268,7 +271,7 @@ fun EnergyHistoryScreen(
     // ── Month Picker Dialog ──
     if (showMonthPickerDialog) {
         CustomVisualMonthPickerDialog(
-            title = "Chọn tháng",
+            title = stringResource(R.string.history_select_month),
             selectedMonthStr = selectedHalfMonthDate,
             availableMonths = availableMonths,
             onMonthSelected = { monthStr ->
@@ -282,7 +285,7 @@ fun EnergyHistoryScreen(
     // ── Toggle Date Picker Dialog ──
     if (showToggleDatePickerDialog) {
         CustomVisualCalendarDialog(
-            title = "Chọn ngày",
+            title = stringResource(R.string.history_select_date),
             selectedDateStr = selectedToggleDate,
             availableDates = availableDates,
             onDateSelected = { dateStr ->
@@ -320,7 +323,7 @@ private fun TopHeaderBar(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = "LỊCH SỬ NĂNG LƯỢNG & THAO TÁC",
+            text = stringResource(R.string.history_title),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
@@ -329,7 +332,7 @@ private fun TopHeaderBar(
         IconButton(onClick = onSyncClick) {
             Icon(
                 imageVector = Icons.Filled.Refresh,
-                contentDescription = "Sync",
+                contentDescription = stringResource(R.string.history_sync),
                 tint = CyanBlue,
                 modifier = Modifier.graphicsLayer {
                     rotationZ = if (isSyncing) spinAngle else 0f
@@ -386,7 +389,7 @@ private fun DailyHourlyBarChartCard(
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = "TIÊU THỤ TRONG NGÀY",
+                        text = stringResource(R.string.history_daily_chart_title),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -430,7 +433,7 @@ private fun DailyHourlyBarChartCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Giờ $timeRangeStr: ${selectedHourLog.energyWh} Wh",
+                        text = stringResource(R.string.history_hour_tooltip, timeRangeStr, selectedHourLog.energyWh),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = CyanBlue,
@@ -581,14 +584,14 @@ private fun MonthlyBarChartCard(
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = "TIÊU THỤ HÀNG THÁNG",
+                        text = stringResource(R.string.history_monthly_chart_title),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
                 Text(
-                    text = "Đơn vị: kWh",
+                    text = stringResource(R.string.history_unit_kwh),
                     style = MaterialTheme.typography.labelSmall,
                     color = SecondaryText
                 )
@@ -728,7 +731,7 @@ private fun ToggleEventsCard(
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = "NHẬT KÝ BẬT TẮT",
+                        text = stringResource(R.string.history_toggle_log_title),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -764,7 +767,7 @@ private fun ToggleEventsCard(
 
             if (events.isEmpty()) {
                 Text(
-                    text = "Không có ghi nhận thao tác bật/tắt trong ngày này.",
+                    text = stringResource(R.string.history_no_toggle_events),
                     style = MaterialTheme.typography.bodySmall,
                     color = SecondaryText,
                     modifier = Modifier.padding(vertical = 12.dp).align(Alignment.CenterHorizontally)
@@ -898,7 +901,7 @@ private fun CustomVisualCalendarDialog(
                     border = BorderStroke(1.dp, CyanBlue.copy(alpha = 0.4f))
                 ) {
                     Text(
-                        text = "Hôm nay",
+                        text = stringResource(R.string.history_today),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = CyanBlue,
@@ -935,7 +938,7 @@ private fun CustomVisualCalendarDialog(
                     }
 
                     Text(
-                        text = String.format(Locale.US, "Tháng %02d / %04d", displayMonth, displayYear),
+                        text = String.format(Locale.US, stringResource(R.string.history_month_header), displayMonth, displayYear),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -955,7 +958,7 @@ private fun CustomVisualCalendarDialog(
                     }
                 }
 
-                val weekDays = listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN")
+                val weekDays = LocalContext.current.resources.getStringArray(R.array.history_week_days)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -1050,12 +1053,12 @@ private fun CustomVisualCalendarDialog(
                     onDismiss()
                 }
             ) {
-                Text("Chọn", fontWeight = FontWeight.Bold, color = CyanBlue)
+                Text(stringResource(R.string.history_choose), fontWeight = FontWeight.Bold, color = CyanBlue)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Hủy", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.history_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     )
@@ -1105,7 +1108,7 @@ private fun MonthlyDailyBarChartCard(
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
-                        text = "TIÊU THỤ TRONG THÁNG",
+                        text = stringResource(R.string.history_monthly_daily_chart_title),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -1130,7 +1133,7 @@ private fun MonthlyDailyBarChartCard(
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            text = "Tháng $selectedMonth",
+                            text = stringResource(R.string.history_month_label, selectedMonth),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -1152,7 +1155,7 @@ private fun MonthlyDailyBarChartCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Ngày ${selectedDayLog.day}/${selectedMonth}: $displayWh",
+                        text = stringResource(R.string.history_day_tooltip, selectedDayLog.day, selectedMonth, displayWh),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = CyanBlue,
@@ -1323,7 +1326,7 @@ private fun CustomVisualMonthPickerDialog(
                         Text("<", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = CyanBlue)
                     }
                     Text(
-                        text = "Năm $selectedYear",
+                        text = stringResource(R.string.history_year_label, selectedYear),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -1334,11 +1337,7 @@ private fun CustomVisualMonthPickerDialog(
                 }
 
                 // ── 12 Months Grid ──
-                val monthsList = listOf(
-                    "Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4",
-                    "Tháng 5", "Tháng 6", "Tháng 7", "Tháng 8",
-                    "Tháng 9", "Tháng 10", "Tháng 11", "Tháng 12"
-                )
+                val monthsList = LocalContext.current.resources.getStringArray(R.array.history_month_names)
 
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     for (row in 0..3) {
@@ -1387,12 +1386,12 @@ private fun CustomVisualMonthPickerDialog(
                     onDismiss()
                 }
             ) {
-                Text("Chọn", fontWeight = FontWeight.Bold, color = CyanBlue)
+                Text(stringResource(R.string.history_choose), fontWeight = FontWeight.Bold, color = CyanBlue)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Hủy", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.history_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     )
