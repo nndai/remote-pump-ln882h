@@ -346,7 +346,7 @@ private fun DailyHourlyBarChartCard(
                     Surface(
                         shape = MaterialTheme.shapes.small,
                         color = MaterialTheme.colorScheme.surfaceVariant,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().padding(start = 8.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.history_hour_tooltip, timeRangeStr, selectedHourLog.energyWh),
@@ -1159,7 +1159,7 @@ private fun MonthlyDailyBarChartCard(
                     Surface(
                         shape = MaterialTheme.shapes.small,
                         color = MaterialTheme.colorScheme.surfaceVariant,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().padding(start = 8.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.history_day_tooltip, selectedDayLog.day, selectedMonth, displayWh),
