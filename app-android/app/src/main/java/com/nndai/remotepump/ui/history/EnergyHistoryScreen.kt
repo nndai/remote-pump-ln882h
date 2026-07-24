@@ -75,14 +75,11 @@ import com.nndai.remotepump.data.model.HourlyEnergyLog
 import com.nndai.remotepump.data.model.MonthlyEnergyLog
 import com.nndai.remotepump.data.model.ToggleLogEvent
 import com.nndai.remotepump.data.repository.LogRepository
-import com.nndai.remotepump.ui.theme.CardSurface
 import com.nndai.remotepump.ui.theme.CyanBlue
-import com.nndai.remotepump.ui.theme.ElevatedSurface
 import com.nndai.remotepump.ui.theme.GreenOk
 import com.nndai.remotepump.ui.theme.OrangeWarning
 import com.nndai.remotepump.ui.theme.RedError
 import com.nndai.remotepump.R
-import com.nndai.remotepump.ui.theme.SecondaryText
 import java.util.Locale
 
 import com.nndai.remotepump.data.model.HalfMonthDayEnergyLog
@@ -143,8 +140,8 @@ fun EnergyHistoryScreen(
                     .weight(1f)
                     .clip(MaterialTheme.shapes.medium),
                 shape = MaterialTheme.shapes.medium,
-                color = CardSurface,
-                border = BorderStroke(1.dp, ElevatedSurface)
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
             ) {
                 Row(
                     modifier = Modifier.padding(14.dp),
@@ -154,7 +151,7 @@ fun EnergyHistoryScreen(
                     Icon(
                         imageVector = Icons.Filled.EnergySavingsLeaf,
                         contentDescription = null,
-                        tint = CyanBlue,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)
                     )
                     Column {
@@ -169,12 +166,12 @@ fun EnergyHistoryScreen(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 17.sp
                             ),
-                            color = CyanBlue
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Text(
                             text = stringResource(R.string.history_daily_consumption),
                             style = MaterialTheme.typography.labelSmall,
-                            color = SecondaryText
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -186,8 +183,8 @@ fun EnergyHistoryScreen(
                     .weight(1f)
                     .clip(MaterialTheme.shapes.medium),
                 shape = MaterialTheme.shapes.medium,
-                color = CardSurface,
-                border = BorderStroke(1.dp, ElevatedSurface)
+                color = MaterialTheme.colorScheme.surface,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
             ) {
                 Row(
                     modifier = Modifier.padding(14.dp),
@@ -197,7 +194,7 @@ fun EnergyHistoryScreen(
                     Icon(
                         imageVector = Icons.Outlined.History,
                         contentDescription = null,
-                        tint = GreenOk,
+                        tint = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.size(24.dp)
                     )
                     Column {
@@ -207,12 +204,12 @@ fun EnergyHistoryScreen(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 17.sp
                             ),
-                            color = GreenOk
+                            color = MaterialTheme.colorScheme.secondary
                         )
                         Text(
                             text = stringResource(R.string.history_toggle_count_today),
                             style = MaterialTheme.typography.labelSmall,
-                            color = SecondaryText
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -365,8 +362,8 @@ private fun DailyHourlyBarChartCard(
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.large),
         shape = MaterialTheme.shapes.large,
-        color = CardSurface,
-        border = BorderStroke(1.dp, ElevatedSurface)
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
     ) {
         Column(
             modifier = Modifier.padding(8.dp, 8.dp, 16.dp, 16.dp),
@@ -400,7 +397,7 @@ private fun DailyHourlyBarChartCard(
                 Surface(
                     onClick = onSelectDateClick,
                     shape = MaterialTheme.shapes.extraSmall,
-                    color = ElevatedSurface
+                    color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -429,7 +426,7 @@ private fun DailyHourlyBarChartCard(
                 val timeRangeStr = "${h}h-${(h + 1) % 24}h"
                 Surface(
                     shape = MaterialTheme.shapes.small,
-                    color = ElevatedSurface,
+                    color = MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
@@ -467,27 +464,27 @@ private fun DailyHourlyBarChartCard(
                     Text(
                         text = v100,
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                        color = SecondaryText
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = v75,
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                        color = SecondaryText.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                     Text(
                         text = v50,
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                        color = SecondaryText.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                     Text(
                         text = v25,
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                        color = SecondaryText.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                     Text(
                         text = "0",
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                        color = SecondaryText
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -508,7 +505,7 @@ private fun DailyHourlyBarChartCard(
                             isSelected -> OrangeWarning
                             log.energyWh == maxWh && maxWh > 0 -> CyanBlue
                             log.energyWh > 0 -> GreenOk
-                            else -> ElevatedSurface
+                            else -> MaterialTheme.colorScheme.surfaceVariant
                         }
 
                         Column(
@@ -540,7 +537,7 @@ private fun DailyHourlyBarChartCard(
                     Text(
                         text = "${hour}h",
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                        color = SecondaryText
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -561,8 +558,8 @@ private fun MonthlyBarChartCard(
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.large),
         shape = MaterialTheme.shapes.large,
-        color = CardSurface,
-        border = BorderStroke(1.dp, ElevatedSurface)
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
     ) {
         Column(
             modifier = Modifier.padding(2.dp, 20.dp, 16.dp, 16.dp),
@@ -593,7 +590,7 @@ private fun MonthlyBarChartCard(
                 Text(
                     text = stringResource(R.string.history_unit_kwh),
                     style = MaterialTheme.typography.labelSmall,
-                    color = SecondaryText
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -622,27 +619,27 @@ private fun MonthlyBarChartCard(
                     Text(
                         text = k100,
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                        color = SecondaryText
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = k75,
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                        color = SecondaryText.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                     Text(
                         text = k50,
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                        color = SecondaryText.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                     Text(
                         text = k25,
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                        color = SecondaryText.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                     Text(
                         text = "0",
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                        color = SecondaryText
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -667,7 +664,7 @@ private fun MonthlyBarChartCard(
                             Text(
                                 text = if (mLog.totalWh > 0) String.format(Locale.US, "%.1f", kwhVal) else "0",
                                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                color = SecondaryText
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Box(
@@ -675,7 +672,7 @@ private fun MonthlyBarChartCard(
                                     .fillMaxWidth(0.95f)
                                     .height((120 * ratio).dp)
                                     .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                                    .background(if (mLog.totalWh > 0) CyanBlue else ElevatedSurface)
+                                    .background(if (mLog.totalWh > 0) CyanBlue else MaterialTheme.colorScheme.surfaceVariant)
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
@@ -707,8 +704,8 @@ private fun ToggleEventsCard(
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.large),
         shape = MaterialTheme.shapes.large,
-        color = CardSurface,
-        border = BorderStroke(1.dp, ElevatedSurface)
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -742,7 +739,7 @@ private fun ToggleEventsCard(
                 Surface(
                     onClick = onSelectDateClick,
                     shape = MaterialTheme.shapes.extraSmall,
-                    color = ElevatedSurface
+                    color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -769,7 +766,7 @@ private fun ToggleEventsCard(
                 Text(
                     text = stringResource(R.string.history_no_toggle_events),
                     style = MaterialTheme.typography.bodySmall,
-                    color = SecondaryText,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(vertical = 12.dp).align(Alignment.CenterHorizontally)
                 )
             } else {
@@ -779,7 +776,7 @@ private fun ToggleEventsCard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(MaterialTheme.shapes.small)
-                                .background(ElevatedSurface.copy(alpha = 0.5f))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                                 .padding(horizontal = 12.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -801,7 +798,7 @@ private fun ToggleEventsCard(
                                     Text(
                                         text = item.source.label,
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = SecondaryText,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                     )
                                 }
@@ -872,7 +869,7 @@ private fun CustomVisualCalendarDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = CardSurface,
+        containerColor = MaterialTheme.colorScheme.surface,
         titleContentColor = MaterialTheme.colorScheme.onSurface,
         textContentColor = MaterialTheme.colorScheme.onSurface,
         title = {
@@ -919,7 +916,7 @@ private fun CustomVisualCalendarDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(ElevatedSurface)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .padding(horizontal = 4.dp, vertical = 2.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -970,7 +967,7 @@ private fun CustomVisualCalendarDialog(
                             textAlign = TextAlign.Center,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (idx == 6) RedError else SecondaryText
+                            color = if (idx == 6) RedError else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -1082,8 +1079,8 @@ private fun MonthlyDailyBarChartCard(
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.large),
         shape = MaterialTheme.shapes.large,
-        color = CardSurface,
-        border = BorderStroke(1.dp, ElevatedSurface)
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f))
     ) {
         Column(
             modifier = Modifier.padding(8.dp, 8.dp, 16.dp, 16.dp),
@@ -1119,7 +1116,7 @@ private fun MonthlyDailyBarChartCard(
                 Surface(
                     onClick = onSelectMonthClick,
                     shape = MaterialTheme.shapes.extraSmall,
-                    color = ElevatedSurface
+                    color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -1151,7 +1148,7 @@ private fun MonthlyDailyBarChartCard(
                 }
                 Surface(
                     shape = MaterialTheme.shapes.small,
-                    color = ElevatedSurface,
+                    color = MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
@@ -1189,27 +1186,27 @@ private fun MonthlyDailyBarChartCard(
                     Text(
                         text = v100,
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                        color = SecondaryText
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = v75,
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                        color = SecondaryText.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                     Text(
                         text = v50,
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                        color = SecondaryText.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                     Text(
                         text = v25,
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                        color = SecondaryText.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
                     Text(
                         text = "0",
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                        color = SecondaryText
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -1230,7 +1227,7 @@ private fun MonthlyDailyBarChartCard(
                             isSelected -> OrangeWarning
                             log.totalWh == maxWh && maxWh > 0 -> CyanBlue
                             log.totalWh > 0 -> GreenOk
-                            else -> ElevatedSurface
+                            else -> MaterialTheme.colorScheme.surfaceVariant
                         }
 
                         Column(
@@ -1264,7 +1261,7 @@ private fun MonthlyDailyBarChartCard(
                     Text(
                         text = "$day",
                         style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                        color = SecondaryText
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -1295,7 +1292,7 @@ private fun CustomVisualMonthPickerDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = CardSurface,
+        containerColor = MaterialTheme.colorScheme.surface,
         titleContentColor = MaterialTheme.colorScheme.onSurface,
         textContentColor = MaterialTheme.colorScheme.onSurface,
         title = {
@@ -1317,7 +1314,7 @@ private fun CustomVisualMonthPickerDialog(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
-                        .background(ElevatedSurface)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -1359,7 +1356,7 @@ private fun CustomVisualMonthPickerDialog(
                                         .clickable {
                                             selectedMonth = monthIdx
                                         },
-                                    color = if (isSelected) CyanBlue else ElevatedSurface,
+                                    color = if (isSelected) CyanBlue else MaterialTheme.colorScheme.surfaceVariant,
                                     shape = RoundedCornerShape(10.dp),
                                     border = if (!isSelected && hasData) BorderStroke(1.dp, GreenOk.copy(alpha = 0.6f)) else null
                                 ) {
