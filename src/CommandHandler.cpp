@@ -119,6 +119,7 @@ void CommandHandler::_handleCommand(const String& source, const JsonDocument& cm
 
     JsonDocument resp;
     resp["cmd"] = cmdStr;
+    resp["timestamp"] = _log->getEpoch();
     if (reqId.length() > 0) resp["reqId"] = reqId;
 
     if (cmdStr == "setRelay") _cmdSetRelay(source, payload, resp);

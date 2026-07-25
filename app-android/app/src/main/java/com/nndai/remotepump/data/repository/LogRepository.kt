@@ -290,28 +290,45 @@ class LogRepository(
             entries.filter { it.name.endsWith(".log") && !it.name.startsWith("nosync") }.forEach { entry ->
                 val fullPath = "/logs/power/${entry.name}"
                 val deviceSize = entry.size
+                val savedFileSize = prefs.getLong(KEY_RAW_SIZE + fullPath, -1L)
                 val savedContent = prefs.getString(KEY_RAW_CONTENT + fullPath, "") ?: ""
-                val savedSize = savedContent.toByteArray(Charsets.UTF_8).size.toLong()
 
-                if (deviceSize > savedSize) {
-                    Log.d(
-                        TAG,
-                        "Power log $fullPath has NEW data (deviceSize=$deviceSize > savedSize=$savedSize). Requesting offset=$savedSize"
-                    )
-                    scope.launch {
-                        val reqId = remote.readFile(fullPath, offset = savedSize, limit = 1024, encode = false)
-                        activeReadFileSessions[fullPath] = FileReadSession(reqId = reqId, expectedOffset = savedSize)
+                when {
+                    savedFileSize == -1L -> {
+                        if (deviceSize > 0L) {
+                            Log.d(TAG, "Power log $fullPath FIRST (deviceSize=$deviceSize). Download from 0")
+                            scope.launch {
+                                val reqId = remote.readFile(fullPath, offset = 0L, limit = 1024, encode = false)
+                                activeReadFileSessions[fullPath] = FileReadSession(reqId = reqId, expectedOffset = 0L)
+                            }
+                        }
                     }
-                } else {
-                    Log.d(
-                        TAG,
-                        "Power log $fullPath UNCHANGED (deviceSize=$deviceSize <= savedSize=$savedSize)."
-                    )
-                    if (savedContent.isNotEmpty()) {
-                        val dateStr = entry.name.removeSuffix(".log")
-                        val dailyLog = parsePowerLogData(dateStr, savedContent)
-                        val finalLog = mergeWithRealtimeData(dailyLog)
-                        savePowerLogToCache(finalLog)
+                    deviceSize > savedFileSize -> {
+                        Log.d(TAG, "Power log $fullPath INCREMENTAL (deviceSize=$deviceSize > saved=$savedFileSize). Offset=$savedFileSize")
+                        scope.launch {
+                            val reqId = remote.readFile(fullPath, offset = savedFileSize, limit = 1024, encode = false)
+                            activeReadFileSessions[fullPath] = FileReadSession(reqId = reqId, expectedOffset = savedFileSize)
+                        }
+                    }
+                    deviceSize < savedFileSize -> {
+                        Log.d(TAG, "Power log $fullPath REPLACED (deviceSize=$deviceSize < saved=$savedFileSize). Re-download from 0")
+                        prefs.edit()
+                            .remove(KEY_RAW_CONTENT + fullPath)
+                            .remove(KEY_RAW_SIZE + fullPath)
+                            .apply()
+                        scope.launch {
+                            val reqId = remote.readFile(fullPath, offset = 0L, limit = 1024, encode = false)
+                            activeReadFileSessions[fullPath] = FileReadSession(reqId = reqId, expectedOffset = 0L)
+                        }
+                    }
+                    else -> {
+                        Log.d(TAG, "Power log $fullPath UNCHANGED (deviceSize=$deviceSize == saved=$savedFileSize).")
+                        if (savedContent.isNotEmpty()) {
+                            val dateStr = entry.name.removeSuffix(".log")
+                            val dailyLog = parsePowerLogData(dateStr, savedContent)
+                            val finalLog = mergeWithRealtimeData(dailyLog)
+                            savePowerLogToCache(finalLog)
+                        }
                     }
                 }
             }
@@ -319,27 +336,44 @@ class LogRepository(
             entries.filter { it.name.endsWith(".log") && !it.name.startsWith("nosync") }.forEach { entry ->
                 val fullPath = "/logs/toggle/${entry.name}"
                 val deviceSize = entry.size
+                val savedFileSize = prefs.getLong(KEY_RAW_SIZE + fullPath, -1L)
                 val savedContent = prefs.getString(KEY_RAW_CONTENT + fullPath, "") ?: ""
-                val savedSize = savedContent.toByteArray(Charsets.UTF_8).size.toLong()
 
-                if (deviceSize > savedSize) {
-                    Log.d(
-                        TAG,
-                        "Toggle log $fullPath has NEW data (deviceSize=$deviceSize > savedSize=$savedSize). Requesting offset=$savedSize"
-                    )
-                    scope.launch {
-                        val reqId = remote.readFile(fullPath, offset = savedSize, limit = 1024, encode = false)
-                        activeReadFileSessions[fullPath] = FileReadSession(reqId = reqId, expectedOffset = savedSize)
+                when {
+                    savedFileSize == -1L -> {
+                        if (deviceSize > 0L) {
+                            Log.d(TAG, "Toggle log $fullPath FIRST (deviceSize=$deviceSize). Download from 0")
+                            scope.launch {
+                                val reqId = remote.readFile(fullPath, offset = 0L, limit = 1024, encode = false)
+                                activeReadFileSessions[fullPath] = FileReadSession(reqId = reqId, expectedOffset = 0L)
+                            }
+                        }
                     }
-                } else {
-                    Log.d(
-                        TAG,
-                        "Toggle log $fullPath UNCHANGED (deviceSize=$deviceSize <= savedSize=$savedSize)."
-                    )
-                    if (savedContent.isNotEmpty()) {
-                        val dateStr = entry.name.removeSuffix(".log")
-                        val events = parseToggleLogData(savedContent)
-                        saveToggleLogToCache(dateStr, events)
+                    deviceSize > savedFileSize -> {
+                        Log.d(TAG, "Toggle log $fullPath INCREMENTAL (deviceSize=$deviceSize > saved=$savedFileSize). Offset=$savedFileSize")
+                        scope.launch {
+                            val reqId = remote.readFile(fullPath, offset = savedFileSize, limit = 1024, encode = false)
+                            activeReadFileSessions[fullPath] = FileReadSession(reqId = reqId, expectedOffset = savedFileSize)
+                        }
+                    }
+                    deviceSize < savedFileSize -> {
+                        Log.d(TAG, "Toggle log $fullPath REPLACED (deviceSize=$deviceSize < saved=$savedFileSize). Re-download from 0")
+                        prefs.edit()
+                            .remove(KEY_RAW_CONTENT + fullPath)
+                            .remove(KEY_RAW_SIZE + fullPath)
+                            .apply()
+                        scope.launch {
+                            val reqId = remote.readFile(fullPath, offset = 0L, limit = 1024, encode = false)
+                            activeReadFileSessions[fullPath] = FileReadSession(reqId = reqId, expectedOffset = 0L)
+                        }
+                    }
+                    else -> {
+                        Log.d(TAG, "Toggle log $fullPath UNCHANGED (deviceSize=$deviceSize == saved=$savedFileSize).")
+                        if (savedContent.isNotEmpty()) {
+                            val dateStr = entry.name.removeSuffix(".log")
+                            val events = parseToggleLogData(savedContent)
+                            saveToggleLogToCache(dateStr, events)
+                        }
                     }
                 }
             }
@@ -382,11 +416,15 @@ class LogRepository(
 
         // Nối dữ liệu mới tải từ offset vào dữ liệu raw đã lưu dưới máy
         val savedContent = prefs.getString(KEY_RAW_CONTENT + fullPath, "") ?: ""
+        val savedFileSize = prefs.getLong(KEY_RAW_SIZE + fullPath, -1L)
 
         val buffer = pendingFileBuffers.getOrPut(fullPath) {
             StringBuilder(
                 if (event.offset == 0L) {
                     ""
+                } else if (savedFileSize > 0L && savedFileSize <= savedContent.length.toLong()) {
+                    // Dùng savedFileSize làm độ dài prefix (tránh lỗi UTF-8 byte count)
+                    savedContent.substring(0, savedFileSize.toInt())
                 } else if (event.offset <= savedContent.length.toLong()) {
                     savedContent.substring(0, event.offset.toInt())
                 } else {
@@ -400,7 +438,8 @@ class LogRepository(
         val currentAccumulatedText = buffer.toString()
 
         if (event.more) {
-            val nextOffset = currentAccumulatedText.toByteArray(Charsets.UTF_8).size.toLong()
+            // Tính nextOffset dựa trên event.offset (từ server) + độ dài data, tránh dùng toByteArray
+            val nextOffset = event.offset + event.data.length.toLong()
             Log.d(
                 TAG,
                 "ReadFile path=$fullPath has MORE data (total size=${event.size}). Requesting next chunk at offset=$nextOffset"
@@ -417,8 +456,11 @@ class LogRepository(
         val fullContent = currentAccumulatedText
         pendingFileBuffers.remove(fullPath)
 
-        // Lưu dữ liệu raw xuống máy để các lần mở app sau không bị mất
-        prefs.edit().putString(KEY_RAW_CONTENT + fullPath, fullContent).apply()
+        // Lưu dữ liệu raw + kích thước file gốc (dùng Long, tránh lỗi UTF-8)
+        prefs.edit()
+            .putString(KEY_RAW_CONTENT + fullPath, fullContent)
+            .putLong(KEY_RAW_SIZE + fullPath, event.size)
+            .apply()
 
         if (fullPath.contains("/power/")) {
             val dailyLog = parsePowerLogData(dateStr, fullContent)
@@ -591,16 +633,14 @@ class LogRepository(
     }
 
     private fun mergeWithRealtimeData(parsedLog: DailyEnergyLog): DailyEnergyLog {
-        // Dữ liệu từ file log luôn là sự thật cuối cùng cho các giờ đã qua.
-        // Trả về trực tiếp parsedLog để:
-        // 1. Xóa giờ lưu tạm cũ, thay bằng dữ liệu chính thức từ file.
-        // 2. Tự động reset giá trị tạm của giờ mới về 0.
-        // Sau đó getStatus sẽ cập nhật lại giá trị tạm mới vào RAM.
+        // Dữ liệu từ file là chính xác nhất → ghi đè toàn bộ giá trị hiện tại
+        // (kể cả giá trị tạm của giờ hiện tại, vì nếu file đã có giờ đó thì nó là số liệu cuối cùng)
         return parsedLog
     }
 
     private fun handleStatusUpdate(event: PumpCommandEvent.StatusUpdate) {
         val realtimeEnergyWh = event.status.hourlyEnergy.toLong()
+        // hourlyEnergy = 0 khi thiết bị vừa reset đầu giờ mới → bỏ qua, giữ nguyên giá trị cũ
         if (realtimeEnergyWh <= 0L) return
 
         val todayStr = getTodayDateStr()
@@ -616,8 +656,7 @@ class LogRepository(
 
         val currentStoredEnergy = originalDailyLog.hourlyList.find { it.hour == curHour }?.energyWh ?: 0L
 
-        // Chỉ cập nhật nếu giá trị realtime lớn hơn giá trị đang lưu 
-        // (tránh trường hợp ghi đè bằng 0 khi thiết bị vừa chuyển sang giờ mới nhưng app chưa kịp tải file log)
+        // Chỉ ghi đè nếu realtime > giá trị đang lưu, tránh ghi đè = 0 ngay đầu giờ
         if (realtimeEnergyWh > currentStoredEnergy) {
             val updatedHourlyList = originalDailyLog.hourlyList.map {
                 if (it.hour == curHour) it.copy(energyWh = realtimeEnergyWh)
@@ -671,6 +710,7 @@ class LogRepository(
         private const val PREFIX_POWER = "power_log_"
         private const val PREFIX_TOGGLE = "toggle_log_"
         private const val KEY_RAW_CONTENT = "raw_content_"
+        private const val KEY_RAW_SIZE = "raw_size_"
         private const val KEY_LAST_POWER_CHECK_DATE = "last_power_check_date"
         private const val KEY_LAST_POWER_CHECK_HOUR = "last_power_check_hour"
         private const val DIR_LIST_PAGE_LIMIT = 20

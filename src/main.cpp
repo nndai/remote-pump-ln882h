@@ -565,7 +565,7 @@ void buttonTask(void* pvParams) {
     button.attachClick(onButtonClick);
     button.attachDoubleClick(onButtonDoubleClick);
     button.attachLongPressStart(onButtonLongPressStart);
-    button.setPressMs(10000);
+    button.setPressMs(5000);
 
     while (1) {
         button.tick();
@@ -645,18 +645,58 @@ static void onButtonDoubleClick() {
 }
 
 static void onButtonLongPressStart() {
-    LT_IM(BTN, "Button long press start (10s)");
+    LT_IM(BTN, "Button long press start");
+
+    uint32_t startTime = millis();
+    uint8_t step = 0;
 
     ledController.blink(100);
     while (digitalRead(PIN_BUTTON) == LOW) {
         vTaskDelay(pdMS_TO_TICKS(100));
+        if (millis() - startTime >= 5000) {
+            ledController.off();
+            startTime = millis();
+
+            while (millis() - startTime < 3000) {
+                vTaskDelay(pdMS_TO_TICKS(100));
+                if (digitalRead(PIN_BUTTON) == HIGH) {
+                    break;
+                }
+            }
+
+            if(digitalRead(PIN_BUTTON) == HIGH) {
+                break;
+            }
+
+            step++;
+            ledController.blink(step * 200);
+            startTime = millis();
+        }
     }
-    LT_IM(BTN, "Entered DEBUG mode via button. Rebooting...");
-    DeviceConfig cfg = configManager.get();
-    cfg.connMode = ConnMode::DEBUG_WS;
-    configManager.save(cfg);
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    ESP.restart();
+    ledController.off();
+
+    if(step == 0) {
+        LT_IM(BTN, "Button long press: Reset WiFi");
+        DeviceConfig cfg = configManager.get();
+        cfg.connMode = ConnMode::AP_WS;
+        configManager.save(cfg);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        ESP.restart();
+    }
+    else if (step == 1) {
+        LT_IM(BTN, "Button long press: Enter DEBUG mode");
+        DeviceConfig cfg = configManager.get();
+        cfg.connMode = ConnMode::DEBUG_WS;
+        configManager.save(cfg);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        ESP.restart();
+    }
+    else if (step >= 2) {
+        LT_IM(BTN, "Button long press: Factory reset");
+        configManager.reset();
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        ESP.restart();
+    }
 }
 
 static void sendResponse(const String& target, const String& json) {

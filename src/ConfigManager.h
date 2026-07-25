@@ -10,7 +10,7 @@ enum class RelayStartMode : uint8_t { OFF = 0, ON, LAST };
 
 struct DeviceConfig {
     // ── Connection mode ──
-    ConnMode connMode = ConnMode::DEBUG_WS;
+    ConnMode connMode = ConnMode::AP_WS;
 
     // ── WiFi STA ──
     char wifiSSID[32] = "";
