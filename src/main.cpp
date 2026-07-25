@@ -23,6 +23,7 @@
 #include "OTAManager.h"
 #include "CommandHandler.h"
 #include "utils/power_mgmt/ln_pm.h"
+#include <hal/hal_gpio.h>
 
 
 // ── Global objects ──
@@ -81,6 +82,7 @@ static void onButtonClick();
 static void onButtonDoubleClick();
 static void onButtonLongPressStart();
 static void sendResponse(const String& target, const String& json);
+static void reclaimRelayGpio();
 void setLogMqttEnable(bool enable);
 bool isLogMqttEnabled();
 extern "C" void logCaptureFlushFile(LogManager* lm);
@@ -224,16 +226,6 @@ void setup() {
     pumpController.setTimeouts(cfg.dryTimeout, cfg.overloadTimeout);
     pumpController.setEventCallback(onPumpState);
 
-    if (cfg.relayStartMode == RelayStartMode::ON) {
-        pumpController.turnOn();
-    }
-    else if (cfg.relayStartMode == RelayStartMode::OFF) {
-        pumpController.turnOff();
-    }
-    else {
-        // LAST: TODO
-        pumpController.turnOff();
-    }
 
     otaManager.begin();
 
@@ -260,6 +252,17 @@ void setup() {
         break;
     }
 
+    if (cfg.relayStartMode == RelayStartMode::ON) {
+        pumpController.turnOn();
+    }
+    else if (cfg.relayStartMode == RelayStartMode::OFF) {
+        pumpController.turnOff();
+    }
+    else {
+        // LAST: TODO
+        pumpController.turnOff();
+    }
+
     xTaskCreate(sensorTask, "sensor", TASK_SENSOR_STACK, NULL, TASK_SENSOR_PRIO, NULL);
     xTaskCreate(buttonTask, "button", TASK_BUTTON_STACK, NULL, TASK_BUTTON_PRIO, taskButtonHandle);
     xTaskCreate(ledTask, "led", TASK_LED_STACK, NULL, TASK_LED_PRIO, taskLedHandle);
@@ -267,6 +270,7 @@ void setup() {
     xTaskCreate(taskStreamSender, "stream", 1000, NULL, tskIDLE_PRIORITY + 2, NULL);
 
     LT_IM(SYS, "System ready!");
+
 }
 
 void loop() {
@@ -279,6 +283,7 @@ void setupWiFiSTA(DeviceConfig& cfg) {
     WiFi.mode(WIFI_STA);
     WiFi.setHostname("iphone");
     if (g_connMode == ConnMode::STA_MQTT) {
+        WiFi.config(IPAddress(0, 0, 0, 0), IPAddress(0, 0, 0, 0), IPAddress(0, 0, 0, 0));
         WiFi.begin(cfg.wifiSSID, cfg.wifiPass);
     }
     else if (g_connMode == ConnMode::DEBUG_WS) {
@@ -287,6 +292,22 @@ void setupWiFiSTA(DeviceConfig& cfg) {
             IPAddress(cfg.debugGateway[0], cfg.debugGateway[1], cfg.debugGateway[2], cfg.debugGateway[3]),
             IPAddress(cfg.debugNetmask[0], cfg.debugNetmask[1], cfg.debugNetmask[2], cfg.debugNetmask[3]));
         WiFi.begin(cfg.debugSSID, cfg.debugPass);
+    }
+}
+
+static void reclaimRelayGpio() {
+    uint32_t bases[2] = { GPIOB_BASE, GPIOA_BASE };
+    gpio_pin_t pins[2] = { GPIO_PIN_3, GPIO_PIN_8 };
+    for (int i = 0; i < 2; i++) {
+        hal_gpio_pin_afio_en(bases[i], pins[i], HAL_DISABLE);
+        gpio_init_t_def cfg;
+        cfg.pin = pins[i];
+        cfg.speed = GPIO_NORMAL_SPEED;
+        cfg.mode = GPIO_MODE_DIGITAL;
+        cfg.dir = GPIO_OUTPUT;
+        cfg.pull = GPIO_PULL_NONE;
+        hal_gpio_init(bases[i], &cfg);
+        hal_gpio_pin_reset(bases[i], pins[i]);
     }
 }
 
@@ -334,17 +355,20 @@ static void setupAP_WS(DeviceConfig& cfg) {
         WiFi.softAP(cfg.apSSID, cfg.apPass);
     }
 
+    reclaimRelayGpio();
+
     wsServer.begin();
     wsServer.setCallback(onWsMessage);
     wsServer.setBinaryCallback(onWsBinary);
-    vTaskDelay(pdMS_TO_TICKS(1000));
-
 }
 
 static void setupSTA_MQTT(DeviceConfig& cfg) {
     LT_IM(NET, "STA+MQTT mode: connecting to %s", cfg.wifiSSID);
     g_connMode = ConnMode::STA_MQTT;
     setupWiFiSTA(cfg);
+
+    reclaimRelayGpio();
+
     mqttClient.begin(cfg.mqttServer, cfg.mqttPort, cfg.mqttUser, cfg.mqttPass,
         DEVICE_NAME, cfg.mqttTopic);
     mqttClient.setCallback(onMqttMessage);
@@ -356,6 +380,8 @@ static void setupDEBUG_WS(DeviceConfig& cfg) {
     LT_IM(NET, "Debug mode: IP %d.%d.%d.%d", cfg.debugIp[0], cfg.debugIp[1], cfg.debugIp[2], cfg.debugIp[3]);
     g_connMode = ConnMode::DEBUG_WS;
     setupWiFiSTA(cfg);
+
+   reclaimRelayGpio();
 }
 
 // ── Task: WiFi Connect ──
@@ -587,16 +613,16 @@ void ledTask(void* pvParams) {
 // ── Callbacks ──
 
 static void onMqttMessage(const String& topic, const String& payload) {
-    if (topic != configManager.get().mqttTopic + String("/otachunk")) {
-        LT_I("MQTT Received message: %s", payload.c_str());
-    }
+    // if (topic != configManager.get().mqttTopic + String("/otachunk")) {
+    //     LT_I("MQTT Received message: %s", payload.c_str());
+    // }
 
     commandHandler.handleCommand("mqtt", payload);
 }
 
 static void onWsMessage(const String& clientId, const String& message) {
     (void)clientId;
-    LT_IM(WS, "Received message: %s", message.c_str());
+    //LT_IM(WS, "Received message: %s", message.c_str());
     commandHandler.handleCommand("ws", message);
 }
 
@@ -609,15 +635,15 @@ static void onWsBinary(const String& clientId, const uint8_t* data, size_t len) 
 }
 
 static void onPumpState(PumpState state, float current, const char* msg) {
-    LT_IM(PUMP, "%s (%.2fA)", msg, current);
+    // LT_IM(PUMP, "%s (%.2fA)", msg, current);
 
-    JsonDocument doc;
-    doc["event"] = "pumpState";
-    doc["state"] = (int)state;
-    doc["message"] = msg;
-    doc["current"] = current;
-    String json;
-    serializeJson(doc, json);
+    // JsonDocument doc;
+    // doc["event"] = "pumpState";
+    // doc["state"] = (int)state;
+    // doc["message"] = msg;
+    // doc["current"] = current;
+    // String json;
+    // serializeJson(doc, json);
 }
 
 static void onButtonClick() {
@@ -632,7 +658,7 @@ static void onButtonClick() {
     String json;
     serializeJson(resp, json);
 
-    if (g_connMode == ConnMode::STA_MQTT && mqttClient.isConnected()) {
+    if (g_connMode == ConnMode::STA_MQTT) {
         sendResponse("mqtt", json);
         return;
     }
