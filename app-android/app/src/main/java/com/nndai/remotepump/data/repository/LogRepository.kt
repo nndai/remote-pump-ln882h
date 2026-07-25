@@ -59,6 +59,12 @@ class LogRepository(
     private val _dailyToggleLogs = MutableStateFlow<Map<String, List<ToggleLogEvent>>>(emptyMap())
     val dailyToggleLogs: StateFlow<Map<String, List<ToggleLogEvent>>> = _dailyToggleLogs.asStateFlow()
 
+    private val _dailySysLogs = MutableStateFlow<Map<String, String>>(emptyMap())
+    val dailySysLogs: StateFlow<Map<String, String>> = _dailySysLogs.asStateFlow()
+
+    private val _availableSysDates = MutableStateFlow<List<String>>(emptyList())
+    val availableSysDates: StateFlow<List<String>> = _availableSysDates.asStateFlow()
+
     private val _isSyncing = MutableStateFlow(false)
     val isSyncing: StateFlow<Boolean> = _isSyncing.asStateFlow()
 
@@ -107,6 +113,9 @@ class LogRepository(
             }
         }
 
+        val sysMap = mutableMapOf<String, String>()
+        val sysDatesSet = mutableSetOf<String>()
+
         // 2. Chỉ load từ RAW CONTENT nếu chưa có trong JSON (tránh ghi đè dữ liệu realtime đã lưu)
         prefs.all.forEach { (key, value) ->
             if (key.startsWith(KEY_RAW_CONTENT) && value is String && value.isNotEmpty()) {
@@ -126,6 +135,9 @@ class LogRepository(
                             toggleMap[dateStr] = events
                             datesSet.add(dateStr)
                         }
+                    } else if (fullPath.contains("/sys/")) {
+                        sysMap[dateStr] = value
+                        sysDatesSet.add(dateStr)
                     }
                 }
             }
@@ -134,6 +146,8 @@ class LogRepository(
         _dailyPowerLogs.value = powerMap
         _dailyToggleLogs.value = toggleMap
         _availableDates.value = sortDates(datesSet.toList())
+        _dailySysLogs.value = sysMap
+        _availableSysDates.value = sortDates(sysDatesSet.toList())
     }
 
     /**
@@ -211,6 +225,25 @@ class LogRepository(
             } else {
                 Log.d(TAG, "syncLogs() - Skip power listDir because time check rule is not met yet")
             }
+        }
+    }
+
+    fun syncSysLogs(force: Boolean = true) {
+        scope.launch {
+            if (_isSyncing.value) return@launch
+            _isSyncing.value = true
+
+            scope.launch {
+                kotlinx.coroutines.delay(30_000)
+                if (_isSyncing.value) {
+                    Log.w(TAG, "Sync sys timeout! Resetting isSyncing to false.")
+                    _isSyncing.value = false
+                    activeListDirReqIds.clear()
+                    pendingDirPages.clear()
+                }
+            }
+
+            requestDirPage("/logs/sys/", 0)
         }
     }
 
@@ -378,6 +411,50 @@ class LogRepository(
                     }
                 }
             }
+        } else if (path.contains("sys")) {
+            entries.filter { it.name.endsWith(".log") && !it.name.startsWith("nosync") }.forEach { entry ->
+                val fullPath = "/logs/sys/${entry.name}"
+                val deviceSize = entry.size
+                val savedFileSize = prefs.getLong(KEY_RAW_SIZE + fullPath, -1L)
+                val savedContent = prefs.getString(KEY_RAW_CONTENT + fullPath, "") ?: ""
+
+                when {
+                    savedFileSize == -1L -> {
+                        if (deviceSize > 0L) {
+                            Log.d(TAG, "Sys log $fullPath FIRST (deviceSize=$deviceSize). Download from 0")
+                            scope.launch {
+                                val reqId = remote.readFile(fullPath, offset = 0L, limit = 1024, encode = false)
+                                activeReadFileSessions[fullPath] = FileReadSession(reqId = reqId, expectedOffset = 0L)
+                            }
+                        }
+                    }
+                    deviceSize > savedFileSize -> {
+                        Log.d(TAG, "Sys log $fullPath INCREMENTAL (deviceSize=$deviceSize > saved=$savedFileSize). Offset=$savedFileSize")
+                        scope.launch {
+                            val reqId = remote.readFile(fullPath, offset = savedFileSize, limit = 1024, encode = false)
+                            activeReadFileSessions[fullPath] = FileReadSession(reqId = reqId, expectedOffset = savedFileSize)
+                        }
+                    }
+                    deviceSize < savedFileSize -> {
+                        Log.d(TAG, "Sys log $fullPath REPLACED (deviceSize=$deviceSize < saved=$savedFileSize). Re-download from 0")
+                        prefs.edit()
+                            .remove(KEY_RAW_CONTENT + fullPath)
+                            .remove(KEY_RAW_SIZE + fullPath)
+                            .apply()
+                        scope.launch {
+                            val reqId = remote.readFile(fullPath, offset = 0L, limit = 1024, encode = false)
+                            activeReadFileSessions[fullPath] = FileReadSession(reqId = reqId, expectedOffset = 0L)
+                        }
+                    }
+                    else -> {
+                        Log.d(TAG, "Sys log $fullPath UNCHANGED (deviceSize=$deviceSize == saved=$savedFileSize).")
+                        if (savedContent.isNotEmpty()) {
+                            val dateStr = entry.name.removeSuffix(".log")
+                            saveSysLogToCache(dateStr, savedContent)
+                        }
+                    }
+                }
+            }
         }
         _isSyncing.value = false
     }
@@ -470,6 +547,8 @@ class LogRepository(
         } else if (fullPath.contains("/toggle/")) {
             val toggleEvents = parseToggleLogData(fullContent)
             saveToggleLogToCache(dateStr, toggleEvents)
+        } else if (fullPath.contains("/sys/")) {
+            saveSysLogToCache(dateStr, fullContent)
         }
     }
 
@@ -606,6 +685,15 @@ class LogRepository(
 
         val updatedDates = sortDates((_availableDates.value.toSet() + dateStr).toList())
         _availableDates.value = updatedDates
+    }
+
+    private fun saveSysLogToCache(dateStr: String, content: String) {
+        val updatedMap = _dailySysLogs.value.toMutableMap()
+        updatedMap[dateStr] = content
+        _dailySysLogs.value = updatedMap
+
+        val updatedDates = sortDates((_availableSysDates.value.toSet() + dateStr).toList())
+        _availableSysDates.value = updatedDates
     }
 
     private fun parseCachedToggleJson(jsonStr: String): List<ToggleLogEvent> {

@@ -649,7 +649,7 @@ static void onPumpState(PumpState state, float current, const char* msg) {
 static void onButtonClick() {
     bool on = !pumpController.isOn();
     pumpController.toggle();
-    LT_IM(BTN, "Button click: Turn %s", on ? "ON" : "OFF");
+    //LT_IM(BTN, "Button click: Turn %s", on ? "ON" : "OFF");
     logManager.logToggle(LogManager::ToggleSource::TOGGLE_BUTTON, on);
     JsonDocument resp;
     resp["cmd"] = "setRelay";

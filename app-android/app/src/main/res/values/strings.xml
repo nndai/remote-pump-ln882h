@@ -125,6 +125,10 @@
     <string name="log_off">Off</string>
     <string name="log_raw_json_hint">Enter raw JSON (e.g. {"cmd":"getStatus"})</string>
     <string name="log_send">Send</string>
+    <string name="log_mode_live">Trực tiếp</string>
+    <string name="log_mode_file">File nhật ký (/logs/sys/)</string>
+    <string name="log_no_file_data">Chưa có dữ liệu file log hệ thống cho ngày này</string>
+    <string name="log_sync_from_device">Đồng bộ từ thiết bị</string>
 
     <!-- Settings Screen -->
     <string name="settings_device_protection_mode">Device Protection Mode</string>
