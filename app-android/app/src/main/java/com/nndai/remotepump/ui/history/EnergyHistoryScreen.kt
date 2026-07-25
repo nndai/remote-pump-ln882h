@@ -517,7 +517,7 @@ private fun MonthlyBarChartCard(
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, bottom = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
