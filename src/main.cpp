@@ -717,12 +717,13 @@ static void onButtonLongPressStart() {
         vTaskDelay(pdMS_TO_TICKS(1000));
         ESP.restart();
     }
-    else if (step >= 2) {
+    else if (step == 2) {
         LT_IM(BTN, "Button long press: Factory reset");
         configManager.reset();
         vTaskDelay(pdMS_TO_TICKS(1000));
         ESP.restart();
     }
+    LT_IM(BTN, "Button long press: No action for step %d", step);
 }
 
 static void sendResponse(const String& target, const String& json) {

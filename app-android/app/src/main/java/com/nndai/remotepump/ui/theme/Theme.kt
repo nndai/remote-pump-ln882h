@@ -28,6 +28,9 @@ private val DarkColorScheme = darkColorScheme(
     onSurface = LightText,
     surfaceVariant = ElevatedSurface,
     onSurfaceVariant = SecondaryText,
+    inverseSurface = ElevatedSurface,
+    inverseOnSurface = LightText,
+    inversePrimary = CyanBlue,
     outline = DividerColor,
     outlineVariant = DimText
 )
@@ -49,6 +52,9 @@ private val LightColorScheme = lightColorScheme(
     onSurface = LightOnSurface,
     surfaceVariant = LightElevatedSurface,
     onSurfaceVariant = LightOnSurfaceVariant,
+    inverseSurface = LightElevatedSurface,
+    inverseOnSurface = LightOnSurface,
+    inversePrimary = LightPrimary,
     outline = LightOutline,
     outlineVariant = LightOnSurfaceVariant
 )

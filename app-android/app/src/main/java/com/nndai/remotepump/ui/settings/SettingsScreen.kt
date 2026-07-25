@@ -889,9 +889,9 @@ fun SettingsScreen(
                                 }
                             },
                         shape = MaterialTheme.shapes.small,
-                        color = if (selected) Color(0xFF004D40) else MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = if (selected) Color(0xFFE0F7FA) else MaterialTheme.colorScheme.onSurfaceVariant,
-                        border = if (selected) BorderStroke(2.dp, Color(0xFF00838F)) else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                        border = if (selected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
                     ) {
                         Box(
                             modifier = Modifier.padding(vertical = 10.dp, horizontal = 4.dp),
@@ -907,7 +907,6 @@ fun SettingsScreen(
                 }
             }
 
-            // ── Calibration Coefficients ──
             SectionHeader(title = stringResource(R.string.settings_calibration_coefficients))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 CompactTextField(
@@ -1334,7 +1333,7 @@ fun SettingsScreen(
                                             }
                                             viewModel.dismissWifiScanDialog()
                                         },
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                                     shape = MaterialTheme.shapes.small
                                 ) {
                                     Row(
