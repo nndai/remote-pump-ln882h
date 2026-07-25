@@ -302,7 +302,7 @@ private fun DailyHourlyBarChartCard(
                             imageVector = Icons.Filled.BarChart,
                             contentDescription = null,
                             tint = CyanBlue,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp).offset(y = (-1).dp)
                         )
                         Text(
                             text = stringResource(R.string.history_daily_chart_title),
@@ -529,7 +529,7 @@ private fun MonthlyBarChartCard(
                             imageVector = Icons.Filled.BarChart,
                             contentDescription = null,
                             tint = GreenOk,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp).offset(y = (-1).dp)
                         )
                         Text(
                             text = stringResource(R.string.history_monthly_chart_title),
@@ -726,7 +726,7 @@ private fun ToggleEventsCard(
                         imageVector = Icons.Filled.Power,
                         contentDescription = null,
                         tint = OrangeWarning,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(20.dp).offset(y = (-1).dp)
                     )
                     Text(
                         text = stringResource(R.string.history_toggle_log_title),
@@ -859,7 +859,6 @@ private fun CustomVisualCalendarDialog(
 
     var displayYear by remember { mutableStateOf(initialDateParts.third) }
     var displayMonth by remember { mutableStateOf(initialDateParts.second) }
-    var tempSelectedDateStr by remember { mutableStateOf(selectedDateStr) }
 
     val cal = remember(displayYear, displayMonth) {
         Calendar.getInstance().apply {
@@ -892,12 +891,8 @@ private fun CustomVisualCalendarDialog(
                 )
                 Surface(
                     modifier = Modifier.clickable {
-                        val todayParts = todayStr.split("-")
-                        if (todayParts.size >= 3) {
-                            displayMonth = todayParts[1].toIntOrNull() ?: displayMonth
-                            displayYear = todayParts[2].toIntOrNull() ?: displayYear
-                        }
-                        tempSelectedDateStr = todayStr
+                        onDateSelected(todayStr)
+                        onDismiss()
                     },
                     shape = RoundedCornerShape(12.dp),
                     color = CyanBlue.copy(alpha = 0.15f),
@@ -908,7 +903,7 @@ private fun CustomVisualCalendarDialog(
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = CyanBlue,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 0.dp)
                     )
                 }
             }
@@ -995,17 +990,18 @@ private fun CustomVisualCalendarDialog(
                                     Spacer(modifier = Modifier.weight(1f).height(36.dp))
                                 } else {
                                     val dateStr = String.format(Locale.US, "%02d-%02d-%04d", dayNum, displayMonth, displayYear)
-                                    val isSelected = (dateStr == tempSelectedDateStr)
+                                    val isSelected = (dateStr == selectedDateStr)
                                     val isToday = (dateStr == todayStr)
                                     val hasData = availableDates.contains(dateStr)
 
                                     Surface(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .height(38.dp)
+                                            .height(39.dp)
                                             .clip(CircleShape)
                                             .clickable {
-                                                tempSelectedDateStr = dateStr
+                                                onDateSelected(dateStr)
+                                                onDismiss()
                                             },
                                         shape = CircleShape,
                                         color = when {
@@ -1049,21 +1045,7 @@ private fun CustomVisualCalendarDialog(
                 }
             }
         },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onDateSelected(tempSelectedDateStr)
-                    onDismiss()
-                }
-            ) {
-                Text(stringResource(R.string.history_choose), fontWeight = FontWeight.Bold, color = CyanBlue)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.history_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
+        confirmButton = {}
     )
 }
 
@@ -1112,7 +1094,7 @@ private fun MonthlyDailyBarChartCard(
                             imageVector = Icons.Filled.BarChart,
                             contentDescription = null,
                             tint = CyanBlue,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(20.dp).offset(y = (-1).dp)
                         )
                         Text(
                             text = stringResource(R.string.history_monthly_daily_chart_title),
@@ -1325,7 +1307,6 @@ private fun CustomVisualMonthPickerDialog(
     }
 
     var selectedYear by remember { mutableStateOf(initialParts.second) }
-    var selectedMonth by remember { mutableStateOf(initialParts.first) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -1381,8 +1362,8 @@ private fun CustomVisualMonthPickerDialog(
                         ) {
                             for (col in 0..2) {
                                 val monthIdx = row * 3 + col + 1
-                                val isSelected = (monthIdx == selectedMonth)
                                 val monthFormatted = String.format(Locale.US, "%02d/%04d", monthIdx, selectedYear)
+                                val isSelected = (monthFormatted == selectedMonthStr)
                                 val hasData = availableMonths.contains(monthFormatted)
 
                                 Surface(
@@ -1391,7 +1372,8 @@ private fun CustomVisualMonthPickerDialog(
                                         .height(42.dp)
                                         .clip(RoundedCornerShape(10.dp))
                                         .clickable {
-                                            selectedMonth = monthIdx
+                                            onMonthSelected(monthFormatted)
+                                            onDismiss()
                                         },
                                     color = if (isSelected) CyanBlue else MaterialTheme.colorScheme.surfaceVariant,
                                     shape = RoundedCornerShape(10.dp),
@@ -1412,21 +1394,6 @@ private fun CustomVisualMonthPickerDialog(
                 }
             }
         },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    val formattedMonth = String.format(Locale.US, "%02d/%04d", selectedMonth, selectedYear)
-                    onMonthSelected(formattedMonth)
-                    onDismiss()
-                }
-            ) {
-                Text(stringResource(R.string.history_choose), fontWeight = FontWeight.Bold, color = CyanBlue)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.history_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
+        confirmButton = {}
     )
 }
