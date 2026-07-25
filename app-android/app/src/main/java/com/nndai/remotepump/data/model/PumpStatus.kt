@@ -17,7 +17,8 @@ data class PumpStatus(
     val uptime: Long = 0,
     val heap: Long = 0,
     val pumpMode: Boolean = true,
-    val pumpState: PumpState = PumpState.OFF
+    val pumpState: PumpState = PumpState.OFF,
+    val timestamp: Long = 0L
 )
 
 enum class PumpState(val code: Int, val label: String, val isLatchedFault: Boolean) {

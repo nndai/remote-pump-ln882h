@@ -119,7 +119,7 @@ void CommandHandler::_handleCommand(const String& source, const JsonDocument& cm
 
     JsonDocument resp;
     resp["cmd"] = cmdStr;
-    resp["timestamp"] = _log->getEpoch();
+    
     if (reqId.length() > 0) resp["reqId"] = reqId;
 
     if (cmdStr == "setRelay") _cmdSetRelay(source, payload, resp);
@@ -211,7 +211,8 @@ void CommandHandler::_cmdSetRelay(const String& source, const JsonDocument& payl
 
 void CommandHandler::_cmdGetStatus(const String& source, const JsonDocument& payload, JsonDocument& resp) {
     (void)payload;
-
+    
+    resp["timestamp"] = _log->getEpoch();
     BL0937SensorData blData = _current->readAll();
 
     resp["status"] = "ok";

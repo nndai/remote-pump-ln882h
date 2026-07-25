@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 /**
  * Session theo dõi yêu cầu đọc file chủ động của thiết bị hiện tại.
@@ -639,12 +640,22 @@ class LogRepository(
     }
 
     private fun handleStatusUpdate(event: PumpCommandEvent.StatusUpdate) {
+        val deviceEpoch = event.status.timestamp
+        // Chỉ xử lý nếu thiết bị đã có thời gian thật (epoch >= 14-11-2023)
+        if (deviceEpoch < 1_700_000_000L) return
+
         val realtimeEnergyWh = event.status.hourlyEnergy.toLong()
-        // hourlyEnergy = 0 khi thiết bị vừa reset đầu giờ mới → bỏ qua, giữ nguyên giá trị cũ
         if (realtimeEnergyWh <= 0L) return
 
-        val todayStr = getTodayDateStr()
-        val curHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            timeInMillis = deviceEpoch * 1000L
+        }
+        val curHour = cal.get(Calendar.HOUR_OF_DAY)
+        Log.d(TAG, "realtimeEnergyWh=$realtimeEnergyWh, curHour=$curHour")
+        val sdf = SimpleDateFormat("dd-MM-yyyy", Locale.US).apply {
+            timeZone = TimeZone.getTimeZone("UTC")
+        }
+        val todayStr = sdf.format(cal.time)
 
         val currentMap = _dailyPowerLogs.value
         val originalDailyLog = currentMap[todayStr] ?: DailyEnergyLog(
@@ -656,7 +667,6 @@ class LogRepository(
 
         val currentStoredEnergy = originalDailyLog.hourlyList.find { it.hour == curHour }?.energyWh ?: 0L
 
-        // Chỉ ghi đè nếu realtime > giá trị đang lưu, tránh ghi đè = 0 ngay đầu giờ
         if (realtimeEnergyWh > currentStoredEnergy) {
             val updatedHourlyList = originalDailyLog.hourlyList.map {
                 if (it.hour == curHour) it.copy(energyWh = realtimeEnergyWh)

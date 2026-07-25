@@ -9,7 +9,7 @@ String FileBrowser::listDir(const String& path, size_t offset, size_t limit) {
     JsonDocument doc;
     doc["status"] = "ok";
     doc["path"] = path;
-    LT_IM(SYS, "Listing directory: %s", path.c_str());
+    //LT_IM(SYS, "Listing directory: %s", path.c_str());
     File dir = LITTLEFS.open(path);
     if (!dir || !dir.isDirectory()) {
         doc["status"] = "error";

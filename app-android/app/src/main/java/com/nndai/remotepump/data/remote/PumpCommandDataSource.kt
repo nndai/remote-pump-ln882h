@@ -246,7 +246,8 @@ class PumpCommandDataSource(
             pumpState = PumpState.fromCodeOrString(
                 code = if (json.has("pumpState")) json.optInt("pumpState") else null,
                 str = json.optString("pumpStateStr", json.optString("pumpState"))
-            )
+            ),
+            timestamp = json.optLong("timestamp", 0L)
         )
         _events.tryEmit(PumpCommandEvent.StatusUpdate(status))
         _events.tryEmit(PumpCommandEvent.CommandResult("getStatus", true))
