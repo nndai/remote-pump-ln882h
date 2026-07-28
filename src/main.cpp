@@ -635,7 +635,7 @@ static void onWsBinary(const String& clientId, const uint8_t* data, size_t len) 
 }
 
 static void onPumpState(PumpState state, float current, bool isOn, const char* msg) {
-    LT_IM(PUMP, "%s (%.2fA)", msg, current);
+    //LT_IM(PUMP, "%s (%.2fA)", msg, current);
 
     if(state == PumpState::DRY_RUN) {
         ledController.blink(500);
