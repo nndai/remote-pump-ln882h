@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Arduino.h>
-#include <Preferences.h>
 #include <cstring>
 #include <Config.h>
 
@@ -58,6 +57,8 @@ struct DeviceConfig {
     // ── Sys log file ──
     bool sysLogFileEnabled = true;
     uint8_t sysLogFileLevel = LT_LEVEL_DEBUG;
+
+    // Chỉ append field mới ở cuối struct, không chèn giữa.
 };
 
 class ConfigManager {
@@ -73,7 +74,5 @@ public:
 
 private:
     DeviceConfig _config;
-    IPreferences _pref;
-    static constexpr const char* NAMESPACE = "pump";
-    static constexpr const char* KEY = "config";
+    static constexpr const char* KV_KEY = "app_cfg";
 };

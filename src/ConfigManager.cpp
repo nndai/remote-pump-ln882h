@@ -1,32 +1,48 @@
 #include "ConfigManager.h"
 #include <Config.h>
+#include <sdk_private.h>
 
 ConfigManager::ConfigManager() {
-    _pref.begin(NAMESPACE, false);
 }
 
 bool ConfigManager::load(DeviceConfig& cfg) {
-    size_t len = _pref.getBytes(KEY, &cfg, sizeof(DeviceConfig));
-    if (len != sizeof(DeviceConfig)) {
+    size_t stored_len;
+    kv_err_t err;
+
+    uint8_t buf[sizeof(DeviceConfig)];
+    err = ln_kv_get(KV_KEY, buf, sizeof(buf), &stored_len);
+    if (err == KV_ERR_NOT_EXIST) {
         cfg = DeviceConfig();
         return false;
     }
-    if (getConnModeString(cfg.connMode) == "UNKNOWN") {
-        LT_IM(CFG, "Invalid connection mode, using defaults");
+    if (err == KV_ERR_BUF_TOO_SHORT) {
+        uint8_t* tmp = (uint8_t*)malloc(stored_len);
+        if (!tmp) { cfg = DeviceConfig(); return false; }
+        err = ln_kv_get(KV_KEY, tmp, stored_len, &stored_len);
+        if (err != KV_ERR_NONE) { free(tmp); cfg = DeviceConfig(); return false; }
+        cfg = DeviceConfig();
+        memcpy(&cfg, tmp, sizeof(DeviceConfig));
+        free(tmp);
+        return true;
+    }
+    if (err != KV_ERR_NONE) {
         cfg = DeviceConfig();
         return false;
     }
+
+    cfg = DeviceConfig();
+    size_t copy_len = (stored_len < sizeof(DeviceConfig)) ? stored_len : sizeof(DeviceConfig);
+    memcpy(&cfg, buf, copy_len);
     return true;
 }
 
 bool ConfigManager::save(const DeviceConfig& cfg) {
-    size_t written = _pref.putBytes(KEY, &cfg, sizeof(DeviceConfig));
-    return written == sizeof(DeviceConfig);
+    return ln_kv_set(KV_KEY, &cfg, sizeof(cfg)) == KV_ERR_NONE;
 }
 
 bool ConfigManager::reset() {
-    _pref.remove(KEY);
     _config = DeviceConfig();
+    ln_kv_del(KV_KEY);
     return true;
 }
 
