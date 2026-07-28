@@ -46,6 +46,7 @@ private:
     uint16_t _dryTimeout;
     uint16_t _overloadTimeout;
     unsigned long _dryStart;
+    unsigned long _criticalStart;
     unsigned long _overloadStart;
     EventCallback _eventCb;
     bool _pumpMode;

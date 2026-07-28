@@ -12,6 +12,7 @@ PumpController::PumpController()
     , _dryTimeout(DEFAULT_NO_WATER_TIMEOUT)
     , _overloadTimeout(DEFAULT_OVERLOAD_TIMEOUT)
     , _dryStart(0)
+    , _criticalStart(0)
     , _overloadStart(0)
     , _pumpMode(true)
     , _faultLatched(false)
@@ -67,6 +68,7 @@ void PumpController::update(float currentAmps) {
         if (currentMa < _threshOff) {
             newState = PumpState::OFF;
             _dryStart = 0;
+            _criticalStart = 0;
             _overloadStart = 0;
         } else if (currentMa >= _threshOverload) {
             if (_overloadStart == 0) {
@@ -75,16 +77,23 @@ void PumpController::update(float currentAmps) {
                 newState = PumpState::OVERLOAD;
             }
             _dryStart = 0;
+            _criticalStart = 0;
         } else if (currentMa >= _threshRunning * 125 / 100) {
-            newState = PumpState::CRITICAL_CURRENT;
             _dryStart = 0;
             _overloadStart = 0;
+            if (_criticalStart == 0) {
+                _criticalStart = now;
+            } else if (now - _criticalStart >= _dryTimeout) {
+                newState = PumpState::CRITICAL_CURRENT;
+            }
         } else if (currentMa >= _threshRunning) {
             newState = PumpState::HIGH_CURRENT;
             _dryStart = 0;
+            _criticalStart = 0;
             _overloadStart = 0;
         } else if (currentMa < _threshNoWater) {
             _overloadStart = 0;
+            _criticalStart = 0;
             if (_dryStart == 0) {
                 _dryStart = now;
             } else if (now - _dryStart >= _dryTimeout) {
@@ -93,6 +102,7 @@ void PumpController::update(float currentAmps) {
         } else {
             newState = PumpState::RUNNING_OK;
             _dryStart = 0;
+            _criticalStart = 0;
             _overloadStart = 0;
         }
     }
@@ -123,6 +133,7 @@ void PumpController::update(float currentAmps) {
 void PumpController::clearPumpFault() {
     _faultLatched = false;
     _dryStart = 0;
+    _criticalStart = 0;
     _overloadStart = 0;
     if (_state == PumpState::DRY_RUN || _state == PumpState::CRITICAL_CURRENT || _state == PumpState::OVERLOAD) {
         _state = PumpState::OFF;
@@ -168,5 +179,6 @@ void PumpController::reset() {
     _state = PumpState::OFF;
     _faultLatched = false;
     _dryStart = 0;
+    _criticalStart = 0;
     _overloadStart = 0;
 }
