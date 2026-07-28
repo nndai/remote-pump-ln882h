@@ -186,8 +186,8 @@ class MqttDeviceChannel(
             mqttClient.subscribe(topicSubscribe, 1)
             Log.d(TAG, "attemptConnect() broker connected, topic subscribed")
             _state.value = ConnectionState.TransportReady("MQTT")
-            startHandshake()
-            startWatchdog()
+//            startHandshake()
+//            startWatchdog()
             true
         } catch (ex: Exception) {
             Log.e(TAG, "attemptConnect() failed: ${ex.message}")
@@ -271,10 +271,9 @@ class MqttDeviceChannel(
             while (isActive && client?.isConnected == true && !handshakeComplete) {
                 val elapsed = System.currentTimeMillis() - startTime
                 if (elapsed >= timeoutMs) {
-                    Log.w(TAG, "startHandshake() 10s timeout reached without getStatus response! Reconnecting...")
+                    Log.w(TAG, "startHandshake() 10s timeout reached without getStatus response! Retrying handshake...")
                     _state.value = ConnectionState.Connecting
-                    disconnectInternal("Handshake timeout (10s)")
-                    scheduleReconnect()
+                    startHandshake()
                     return@launch
                 }
                 delay(250L)

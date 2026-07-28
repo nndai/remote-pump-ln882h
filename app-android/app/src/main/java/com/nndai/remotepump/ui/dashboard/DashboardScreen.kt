@@ -102,9 +102,9 @@ fun DashboardScreen(
     }
 
     // Refresh status when screen becomes visible/resumed
-    LaunchedEffect(Unit) {
-        viewModel.refreshStatus()
-    }
+//    LaunchedEffect(Unit) {
+//        viewModel.refreshStatus()
+//    }
 
     // Show fault modal dialog BOTH on entering screen AND on real-time state changes
     val currentPumpState = status?.pumpState ?: PumpState.OFF
