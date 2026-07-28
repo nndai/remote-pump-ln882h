@@ -77,7 +77,7 @@ static void setupDEBUG_WS(DeviceConfig& cfg);
 static void onMqttMessage(const String& topic, const String& payload);
 static void onWsMessage(const String& clientId, const String& message);
 static void onWsBinary(const String& clientId, const uint8_t* data, size_t len);
-static void onPumpState(PumpState state, float current, const char* msg);
+static void onPumpState(PumpState state, float current, bool isOn, const char* msg);
 static void onButtonClick();
 static void onButtonDoubleClick();
 static void onButtonLongPressStart();
@@ -576,16 +576,10 @@ void sensorTask(void* pvParams) {
         if (now - lastMonitorLoop >= 1000) {
             currentSensor.loop();
             lastMonitorLoop = now;
-            if (pumpController.isOn()) {
-               ledController.on();
-            }
-            else {
-                ledController.off();
-            }
         }
         float current = currentSensor.getCurrent(); // A
         pumpController.update(current);
-        vTaskDelayUntil(&lastWake, pdMS_TO_TICKS(50));
+        vTaskDelayUntil(&lastWake, pdMS_TO_TICKS(20));
     }
 }
 
@@ -640,16 +634,27 @@ static void onWsBinary(const String& clientId, const uint8_t* data, size_t len) 
     }
 }
 
-static void onPumpState(PumpState state, float current, const char* msg) {
-    // LT_IM(PUMP, "%s (%.2fA)", msg, current);
+static void onPumpState(PumpState state, float current, bool isOn, const char* msg) {
+    LT_IM(PUMP, "%s (%.2fA)", msg, current);
 
-    // JsonDocument doc;
-    // doc["event"] = "pumpState";
-    // doc["state"] = (int)state;
-    // doc["message"] = msg;
-    // doc["current"] = current;
-    // String json;
-    // serializeJson(doc, json);
+    if(state == PumpState::DRY_RUN) {
+        ledController.blink(500);
+    }
+    else if(state == PumpState::OVERLOAD) {
+        ledController.blink(200);
+    }
+    else if(state == PumpState::HIGH_CURRENT) {
+        ledController.blink(2, 500, 3000);
+    }
+    else if(state == PumpState::CRITICAL_CURRENT) {
+        ledController.blink(3, 200, 1000);
+    }
+    else if (isOn == false) {
+        ledController.off();
+    }
+    else if (isOn == true) {
+        ledController.on();
+    }
 }
 
 static void onButtonClick() {

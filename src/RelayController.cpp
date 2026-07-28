@@ -36,7 +36,9 @@ void RelayController::_triacOff() {
 // step 1: TRIAC fires → wait 20ms → relay closes
 // step 2: relay closed → wait 20ms → TRIAC gate off (relay carries load)
 void RelayController::turnOn() {
-    if (_on) return;                      // already fully on
+    if (_on) return;           // already fully on
+    _on = true;
+    _onTime = millis();
 
     if (_step == 3) {
         // Was turning OFF, relay still on, TRIAC already on
@@ -49,8 +51,6 @@ void RelayController::turnOn() {
         // Was turning OFF, relay already open, TRIAC still on
         // → close relay now, will kill TRIAC after settle
         digitalWrite(_relayPin, HIGH);
-        _on = true;
-        _onTime = millis();
         _step = 2;
         _lastAction = millis();
         return;
@@ -66,7 +66,11 @@ void RelayController::turnOn() {
 // step 3: TRIAC re-fires → wait 20ms → relay opens
 // step 4: relay open → wait 20ms → TRIAC gate off (everything off)
 void RelayController::turnOff() {
-    if (!_on && _step == 0) return;       // already fully off
+    if (!_on) {
+        if (_step == 0) return;
+        if (_step >= 3) return;
+    }
+    _on = false;
 
     if (_step == 1) {
         // Was turning ON, TRIAC on but relay never closed
@@ -90,7 +94,7 @@ void RelayController::turnOff() {
 }
 
 bool RelayController::toggle() {
-    if (_on || _step == 2) turnOff();
+    if (_on) turnOff();
     else turnOn();
     return _on;
 }
@@ -102,8 +106,6 @@ void RelayController::handle() {
         // TRIAC on → close relay
         if (now - _lastAction >= T_TRIAC_SETTLE) {
             digitalWrite(_relayPin, HIGH);
-            _on = true;
-            _onTime = now;
             _lastAction = now;
             _step = 2;
         }
@@ -117,7 +119,6 @@ void RelayController::handle() {
         // TRIAC re-fired → open relay
         if (now - _lastAction >= T_TRIAC_SETTLE) {
             digitalWrite(_relayPin, LOW);
-            _on = false;
             if (_onDurationCb) {
                 _onDurationCb(now - _onTime);
             }

@@ -16,7 +16,7 @@ enum class PumpState {
 
 class PumpController {
 public:
-    using EventCallback = std::function<void(PumpState state, float current, const char* message)>;
+    using EventCallback = std::function<void(PumpState state, float current, bool isOn, const char* message)>;
 
     PumpController();
     void begin(RelayController* relay, bool pumpMode);

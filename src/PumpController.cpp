@@ -115,7 +115,7 @@ void PumpController::update(float currentAmps) {
             case PumpState::OVERLOAD:         msg = "OVERLOAD - current too high!"; break;
         }
         if (_eventCb) {
-            _eventCb(_state, currentAmps, msg);
+            _eventCb(_state, currentAmps, isOn(), msg);
         }
     }
 }
@@ -126,17 +126,26 @@ void PumpController::clearPumpFault() {
     _overloadStart = 0;
     if (_state == PumpState::DRY_RUN || _state == PumpState::CRITICAL_CURRENT || _state == PumpState::OVERLOAD) {
         _state = PumpState::OFF;
+        if (_eventCb) {
+            _eventCb(_state, 0.0f, isOn(), "Pump OFF");
+        }
     }
 }
 
 void PumpController::turnOn() {
     _faultLatched = false;
     if (_relay) _relay->turnOn();
+    if (_eventCb) {
+        _eventCb(_state, 0.0f, isOn(), "Pump ON");
+    }
 }
 
 void PumpController::turnOff() {
     _faultLatched = false;
     if (_relay) _relay->turnOff();
+    if (_eventCb) {
+        _eventCb(_state, 0.0f, isOn(), "Pump OFF");
+    }
 }
 
 void PumpController::toggle() {
