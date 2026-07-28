@@ -57,6 +57,7 @@ public:
     }
 
     void on() {
+        if (_state == ON) return;
         _state = ON;
         _isOn = 1;
         _blinkInterval = 0;
@@ -64,6 +65,7 @@ public:
     }
 
     void off() {
+        if (_state == OFF) return;
         _state = OFF;
         _isOn = 0;
         _blinkInterval = 0;

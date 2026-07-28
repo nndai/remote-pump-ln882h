@@ -576,6 +576,12 @@ void sensorTask(void* pvParams) {
         if (now - lastMonitorLoop >= 1000) {
             currentSensor.loop();
             lastMonitorLoop = now;
+            if (pumpController.isOn()) {
+               ledController.on();
+            }
+            else {
+                ledController.off();
+            }
         }
         float current = currentSensor.getCurrent(); // A
         pumpController.update(current);
