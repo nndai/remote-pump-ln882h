@@ -3,9 +3,9 @@
 #include <Arduino.h>
 
 // Default calibration values
-#define EMS_VOLTAGE_CAL   0.121708f
-#define EMS_CURRENT_CAL   0.012870f
-#define EMS_POWER_CAL     1.3254f
+#define EMS_VOLTAGE_CAL   0.121708
+#define EMS_CURRENT_CAL   0.012219731
+#define EMS_POWER_CAL     1.375000049
 
 struct BL0937SensorData {
     float current;       // A
@@ -13,8 +13,8 @@ struct BL0937SensorData {
     float power;         // W
     float apparent;      // VA
     float pf;
-    double hourlyEnergy;   // Wh
-    double dailyEnergy;       // Wh
+    double hourlyEnergy; // Wh
+    double dailyEnergy;  // Wh
 };
 
 class CurrentSensor {
