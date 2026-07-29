@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.nndai.remotepump.data.di.PumpRepositoryProvider
 import com.nndai.remotepump.data.repository.LogRepository
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -16,6 +17,7 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
     private val logRepository: LogRepository = PumpRepositoryProvider.provideLogRepository()
 
     val isLogEnabled: StateFlow<Boolean> = repository.isLogEnabled
+    val userMessages: SharedFlow<String> = logRepository.userMessages
 
     // 0 = Live MQTT Log, 1 = File Log (/logs/sys/)
     private val _logTabMode = MutableStateFlow(0)
@@ -70,6 +72,10 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
     fun syncSysLogs(force: Boolean = true) {
         logRepository.syncSysLogs(force)
+    }
+
+    fun deleteSysLogFile(dateStr: String) {
+        logRepository.deleteSysLogFile(dateStr)
     }
 
     fun setLogEnabled(enabled: Boolean) {

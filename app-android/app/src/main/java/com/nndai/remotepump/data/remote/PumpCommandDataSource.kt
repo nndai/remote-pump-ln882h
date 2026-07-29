@@ -148,6 +148,14 @@ class PumpCommandDataSource(
         return reqId
     }
 
+    suspend fun deleteItem(path: String, customReqId: String? = null): String {
+        val reqId = customReqId ?: generateReqId()
+        sendCommand("deleteItem", JSONObject().apply {
+            put("path", path)
+        }, reqId = reqId)
+        return reqId
+    }
+
     // ── Private helpers ──
 
     private suspend fun sendCommand(cmd: String, payload: JSONObject? = null, reqId: String? = null) {
@@ -207,6 +215,7 @@ class PumpCommandDataSource(
                 "scanWifi", "getScanWifiData" -> emitWifiScanResult(json)
                 "listDir" -> emitListDirResult(json)
                 "readFile", "downloadFile" -> emitReadFileResult(json)
+                "deleteItem" -> emitDeleteItemResult(json)
                 "setConfig", "setDeviceMode", "reboot", "factoryReset", "setLogMqtt", "calibrate", "resetCalibration" ->
                     emitCommandResult(cmd, json)
                 else -> {
@@ -444,6 +453,22 @@ class PumpCommandDataSource(
                 success = success,
                 message = if (!success) json.optString("message", "Read file failed") else null,
                 reqId = reqId
+            )
+        )
+    }
+
+    private fun emitDeleteItemResult(json: JSONObject) {
+        val status = json.optString("status", "")
+        val success = status == "ok"
+        val path = json.optString("path", "")
+        val reqId = if (json.has("reqId")) json.optString("reqId").takeIf { it.isNotEmpty() } else null
+        val message = json.optString("message").takeIf { it.isNotEmpty() }
+        _events.tryEmit(
+            PumpCommandEvent.DeleteItemResult(
+                success = success,
+                path = path,
+                reqId = reqId,
+                message = message
             )
         )
     }

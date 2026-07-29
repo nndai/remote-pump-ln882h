@@ -125,6 +125,13 @@
     <string name="log_off">Tắt</string>
     <string name="log_raw_json_hint">Nhập raw JSON (ví dụ: {"cmd":"getStatus"})</string>
     <string name="log_send">Gửi</string>
+    <string name="log_mode_live">Trực tiếp</string>
+    <string name="log_mode_file">File nhật ký (/logs/sys/)</string>
+    <string name="log_no_file_data">Chưa có dữ liệu file log hệ thống cho ngày này</string>
+    <string name="log_sync_from_device">Đồng bộ từ thiết bị</string>
+    <string name="log_delete_file_title">Xóa file log hệ thống</string>
+    <string name="log_delete_file_confirm">Bạn có chắc chắn muốn xóa file %1$s khỏi thiết bị không?</string>
+    <string name="log_delete_action">Xóa</string>
 
     <!-- Settings Screen -->
     <string name="settings_device_protection_mode">Chế độ bảo vệ thiết bị</string>

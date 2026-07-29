@@ -1,5 +1,6 @@
 package com.nndai.remotepump.ui.log
 
+import android.widget.Toast
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -73,6 +74,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nndai.remotepump.R
 import com.nndai.remotepump.data.repository.LogRepository
+import com.nndai.remotepump.ui.components.ConfirmDialog
 import com.nndai.remotepump.ui.theme.CyanBlue
 import com.nndai.remotepump.ui.theme.GreenOk
 import com.nndai.remotepump.ui.theme.RedError
@@ -84,6 +86,7 @@ fun LogScreen(
     viewModel: LogViewModel = viewModel(),
     bottomPadding: Dp = 0.dp
 ) {
+    val context = LocalContext.current
     val logTabMode by viewModel.logTabMode.collectAsStateWithLifecycle()
     val isEnabled by viewModel.isLogEnabled.collectAsStateWithLifecycle()
     val selectedSysDate by viewModel.selectedSysDate.collectAsStateWithLifecycle()
@@ -91,6 +94,12 @@ fun LogScreen(
     val dailySysLogs by viewModel.dailySysLogs.collectAsStateWithLifecycle()
     val isSyncing by viewModel.isSyncing.collectAsStateWithLifecycle()
     val logs = viewModel.logs
+
+    LaunchedEffect(Unit) {
+        viewModel.userMessages.collect { msg ->
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -173,7 +182,8 @@ fun LogScreen(
                 dailySysLogs = dailySysLogs,
                 isSyncing = isSyncing,
                 onSelectDate = { viewModel.selectSysDate(it) },
-                onSyncClick = { viewModel.syncSysLogs(force = true) }
+                onSyncClick = { viewModel.syncSysLogs(force = true) },
+                onDeleteClick = { dateStr -> viewModel.deleteSysLogFile(dateStr) }
             )
         }
     }
@@ -264,7 +274,6 @@ private fun LiveLogsContent(
                 .padding(horizontal = 16.dp, vertical = 8.dp)
                 .clip(MaterialTheme.shapes.medium)
                 .background(MaterialTheme.colorScheme.surfaceVariant)
-                .border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant.copy(0.3f), MaterialTheme.shapes.medium)
         ) {
             val horizontalScrollState = rememberScrollState()
 
@@ -355,9 +364,11 @@ private fun FileLogsContent(
     dailySysLogs: Map<String, String>,
     isSyncing: Boolean,
     onSelectDate: (String) -> Unit,
-    onSyncClick: () -> Unit
+    onSyncClick: () -> Unit,
+    onDeleteClick: (String) -> Unit
 ) {
     var showDatePickerDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
 
     val infiniteTransition = rememberInfiniteTransition(label = "sysSyncSpin")
     val spinAngle by infiniteTransition.animateFloat(
@@ -418,6 +429,15 @@ private fun FileLogsContent(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+                if (selectedDate.isNotBlank() && (dailySysLogs.containsKey(selectedDate) || availableDates.contains(selectedDate))) {
+                    IconButton(onClick = { showDeleteConfirmDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = stringResource(R.string.log_delete_file_title),
+                            tint = RedError
+                        )
+                    }
                 }
                 IconButton(onClick = onSyncClick) {
                     Icon(
@@ -497,6 +517,20 @@ private fun FileLogsContent(
                 showDatePickerDialog = false
             },
             onDismiss = { showDatePickerDialog = false }
+        )
+    }
+
+    if (showDeleteConfirmDialog) {
+        ConfirmDialog(
+            title = stringResource(R.string.log_delete_file_title),
+            message = stringResource(R.string.log_delete_file_confirm, "$selectedDate.log"),
+            confirmText = stringResource(R.string.log_delete_action),
+            isDangerous = true,
+            onConfirm = {
+                showDeleteConfirmDialog = false
+                onDeleteClick(selectedDate)
+            },
+            onDismiss = { showDeleteConfirmDialog = false }
         )
     }
 }

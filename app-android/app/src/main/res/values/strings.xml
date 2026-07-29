@@ -125,10 +125,13 @@
     <string name="log_off">Off</string>
     <string name="log_raw_json_hint">Enter raw JSON (e.g. {"cmd":"getStatus"})</string>
     <string name="log_send">Send</string>
-    <string name="log_mode_live">Trực tiếp</string>
-    <string name="log_mode_file">File nhật ký (/logs/sys/)</string>
-    <string name="log_no_file_data">Chưa có dữ liệu file log hệ thống cho ngày này</string>
-    <string name="log_sync_from_device">Đồng bộ từ thiết bị</string>
+    <string name="log_mode_live">Live</string>
+    <string name="log_mode_file">File Log (/logs/sys/)</string>
+    <string name="log_no_file_data">No system log file data available for this date</string>
+    <string name="log_sync_from_device">Sync from device</string>
+    <string name="log_delete_file_title">Delete System Log File</string>
+    <string name="log_delete_file_confirm">Are you sure you want to delete file %1$s from the device?</string>
+    <string name="log_delete_action">Delete</string>
 
     <!-- Settings Screen -->
     <string name="settings_device_protection_mode">Device Protection Mode</string>

@@ -12,8 +12,11 @@ import com.nndai.remotepump.data.model.ToggleSource
 import com.nndai.remotepump.data.remote.PumpCommandDataSource
 import com.nndai.remotepump.data.remote.PumpCommandEvent
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -50,6 +53,9 @@ class LogRepository(
 ) {
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
+    private val _userMessages = MutableSharedFlow<String>(extraBufferCapacity = 10)
+    val userMessages: SharedFlow<String> = _userMessages.asSharedFlow()
+
     private val _availableDates = MutableStateFlow<List<String>>(emptyList())
     val availableDates: StateFlow<List<String>> = _availableDates.asStateFlow()
 
@@ -81,6 +87,7 @@ class LogRepository(
                 when (event) {
                     is PumpCommandEvent.ListDirResult -> handleListDirResult(event)
                     is PumpCommandEvent.ReadFileResult -> handleReadFileResult(event)
+                    is PumpCommandEvent.DeleteItemResult -> handleDeleteItemResult(event)
                     is PumpCommandEvent.StatusUpdate -> handleStatusUpdate(event)
                     else -> {}
                 }
@@ -244,6 +251,49 @@ class LogRepository(
             }
 
             requestDirPage("/logs/sys/", 0)
+        }
+    }
+
+    fun deleteSysLogFile(dateStr: String) {
+        val fullPath = "/logs/sys/$dateStr.log"
+        val reqId = "del_${System.currentTimeMillis()}"
+        scope.launch {
+            try {
+                remote.deleteItem(fullPath, reqId)
+            } catch (e: Exception) {
+                _userMessages.emit("Không thể gửi lệnh xóa file $dateStr.log")
+            }
+        }
+    }
+
+    private fun handleDeleteItemResult(event: PumpCommandEvent.DeleteItemResult) {
+        val fullPath = event.path
+        val filename = fullPath.substringAfterLast("/")
+        val dateStr = filename.removeSuffix(".log")
+
+        if (event.success) {
+            prefs.edit()
+                .remove(KEY_RAW_CONTENT + fullPath)
+                .remove(KEY_RAW_SIZE + fullPath)
+                .apply()
+
+            if (fullPath.contains("/sys/")) {
+                val updatedMap = _dailySysLogs.value.toMutableMap()
+                updatedMap.remove(dateStr)
+                _dailySysLogs.value = updatedMap
+
+                val updatedDates = _availableSysDates.value.filter { it != dateStr }
+                _availableSysDates.value = updatedDates
+            }
+
+            scope.launch {
+                _userMessages.emit("Đã xóa file $filename thành công!")
+            }
+        } else {
+            scope.launch {
+                val errMsg = event.message ?: "Xóa file thất bại"
+                _userMessages.emit("Lỗi xóa file $filename: $errMsg")
+            }
         }
     }
 

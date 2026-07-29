@@ -78,4 +78,12 @@ sealed interface PumpCommandEvent {
 
     /** Trạng thái log MQTT hiện tại. */
     data class LogMqttStatus(val enabled: Boolean) : PumpCommandEvent
+
+    /** Kết quả xóa file/thư mục. */
+    data class DeleteItemResult(
+        val success: Boolean,
+        val path: String,
+        val reqId: String? = null,
+        val message: String? = null
+    ) : PumpCommandEvent
 }
