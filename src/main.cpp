@@ -19,7 +19,7 @@
 #include "PumpController.h"
 #include "MqttClient.h"
 #include "WebSocketServer.h"
-#include "LogManager.h"
+#include "log/LogManager.h"
 #include "OTAManager.h"
 #include "CommandHandler.h"
 #include "utils/power_mgmt/ln_pm.h"

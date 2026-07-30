@@ -66,8 +66,6 @@ extern "C" void logCaptureFlushFile(LogManager* lm) {
         if (!s_buffer[i].writtenToFile) {
             lm->writeFile(s_buffer[i].line);
         }
-        free(s_buffer[i].line);
-        s_buffer[i].line = nullptr;
     }
     s_fileFlushed = true;
 }
@@ -91,5 +89,3 @@ extern "C" void logCaptureFlushCallback(LogManager::LogCallback cb) {
 extern "C" bool logCaptureIsDone() {
     return s_callbackFlushed;
 }
-
-

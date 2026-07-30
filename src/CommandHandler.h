@@ -15,7 +15,7 @@
 #include "PumpController.h"
 #include "MqttClient.h"
 #include "WebSocketServer.h"
-#include "LogManager.h"
+#include "log/LogManager.h"
 #include "OTAManager.h"
 #include "FileBrowser.h"
 
