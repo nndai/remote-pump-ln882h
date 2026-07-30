@@ -41,12 +41,10 @@ class LogViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch {
             repository.logs.collect { msg ->
-                if (isLogEnabled.value) {
-                    if (logs.size >= 2000) {
-                        logs.removeAt(0)
-                    }
-                    logs.add(msg)
+                if (logs.size >= 2000) {
+                    logs.removeAt(0)
                 }
+                logs.add(msg)
             }
         }
 
