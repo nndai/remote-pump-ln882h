@@ -25,6 +25,9 @@
 #include "utils/power_mgmt/ln_pm.h"
 #include <hal/hal_gpio.h>
 
+#include "BleProvisioning.h"
+#include "ProvisionManager.h"
+
 
 // ── Global objects ──
 ConfigManager configManager;
@@ -41,6 +44,10 @@ WiFiUDP ntpUdp;
 NTPClient ntpClient(ntpUdp, 7 * 3600);
 OTAManager otaManager;
 CommandHandler commandHandler;
+ProvisionManager provisionManager;
+
+// ── Provision event queue ──
+static QueueHandle_t s_provEventQueue = NULL;
 
 // ── Task handles ──
 TaskHandle_t* taskWifiConnectHandle = nullptr;
@@ -65,6 +72,7 @@ void ledTask(void* pvParams);
 void taskWdtFeed(void* pvParams);
 void taskEnergyLog(void* pvParams);
 void taskStreamSender(void* pvParams);
+static void taskProvisionFunc(void* pvParams);
 
 // ── Energy log tracking ──
 static uint32_t s_lastHourEpoch = UINT32_MAX;
@@ -236,6 +244,15 @@ void setup() {
     ln_pm_always_clk_disable_select(CLK_G_I2S | CLK_G_WS2811 | CLK_G_SDIO | CLK_G_AES);
     //ln_pm_sleep_mode_set(LIGHT_SLEEP);
 
+    // ── BLE Provisioning ──
+    s_provEventQueue = xQueueCreate(PROVISION_QUEUE_LENGTH, sizeof(ProvisionMessage));
+    if (!cfg.provisioned) {
+        LT_IM(SYS, "Not provisioned, starting BLE provisioning");
+        provisionManager.begin(s_provEventQueue);
+    } else {
+        LT_IM(SYS, "Already provisioned, skipping BLE");
+    }
+
     // Connection-specific setup
     switch (cfg.connMode) {
     case ConnMode::AP_WS:
@@ -268,6 +285,7 @@ void setup() {
     xTaskCreate(ledTask, "led", TASK_LED_STACK, NULL, TASK_LED_PRIO, taskLedHandle);
     xTaskCreate(taskEnergyLog, "energyLog", 1000, NULL, tskIDLE_PRIORITY + 1, NULL);
     xTaskCreate(taskStreamSender, "stream", 1000, NULL, tskIDLE_PRIORITY + 2, NULL);
+    xTaskCreate(taskProvisionFunc, "prov", TASK_PROVISION_STACK, NULL, TASK_PROVISION_PRIO, NULL);
 
     LT_IM(SYS, "System ready!");
 
@@ -562,6 +580,18 @@ void taskStreamSender(void* pvParams) {
         commandHandler.sendStream(CommandHandler::STREAM_STATUS);
         commandHandler.sendStream(CommandHandler::STREAM_SYSINFO);
         vTaskDelayUntil(&lastWake, pdMS_TO_TICKS(2000));
+    }
+}
+
+// ── Provision Task ──
+static void taskProvisionFunc(void* pvParams) {
+    (void)pvParams;
+    ProvisionMessage msg;
+
+    while (1) {
+        if (s_provEventQueue && xQueueReceive(s_provEventQueue, &msg, portMAX_DELAY) == pdTRUE) {
+            provisionManager.processMessage(msg);
+        }
     }
 }
 

@@ -54,6 +54,9 @@ struct DeviceConfig {
     double vCal = NAN;   // voltage coefficient
     double pCal = NAN;   // power coefficient
 
+    // ── Provisioning ──
+    bool provisioned = false;   // đã được provisioning qua BLE chưa
+
     // ── Sys log file ──
     bool sysLogFileEnabled = true;
     uint8_t sysLogFileLevel = LT_LEVEL_DEBUG;

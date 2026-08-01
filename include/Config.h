@@ -86,4 +86,9 @@
 #define TASK_LED_PRIO            1
 #define TASK_NTPCLIENT_STACK     512
 
+// ── BLE Provisioning ──
+#define TASK_PROVISION_STACK     2048
+#define TASK_PROVISION_PRIO      3
+#define PROVISION_QUEUE_LENGTH   16
+
 #endif // CONFIG_H
