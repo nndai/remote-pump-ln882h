@@ -75,6 +75,16 @@
 #define MQTT_SOCKET_TIMEOUT_SEC  7
 
 
+// ── OTA khẩn cấp bằng tay (OtaBootGuard, xem src/OtaBootGuard.cpp) ──
+// Cách dùng: 2 lần boot power-on + giữ nút (lần 2 giữ >= OTA_BTN_HOLD_MS rồi
+// nhả trong OTA_BTN_RELEASE_MS) -> nối WiFi debug, tải DEFAULT_OTA_URL
+// (phải là file .uf2, không cần Content-Length), nạp rồi khởi động lại.
+#define OTA_BTN_KEY               "ota_btn"
+#define OTA_BTN_HOLD_MS           5000    // giữ nút liên tục ít nhất 5s...
+#define OTA_BTN_RELEASE_MS        5000    // ...rồi nhả trong 5s kế tiếp -> vào OTA
+#define DEFAULT_OTA_URL           "http://192.168.137.1:8000/firmware.uf2"
+
+
 // ── FreeRTOS task config ──
 #define TASK_NETWORK_STACK       4096
 #define TASK_NETWORK_PRIO        3

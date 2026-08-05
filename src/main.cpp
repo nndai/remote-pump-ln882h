@@ -22,6 +22,7 @@
 #include "log/LogManager.h"
 #include "OTAManager.h"
 #include "CommandHandler.h"
+#include "BuildInfo.h"
 #include "utils/power_mgmt/ln_pm.h"
 #include <hal/hal_gpio.h>
 
@@ -108,7 +109,7 @@ void setup() {
 
     delay(10);
     LT_IM(SYS, "=== Remote Pump Controller LN882H ===");
-    LT_IM(SYS, "FW Version: %s", FIRMWARE_VERSION);
+    LT_IM(SYS, "FW Version: %s (build %s, %u)", FIRMWARE_VERSION, buildStr(), (unsigned)buildUnixTime());
 
     //Watchdog: 15s timeout, feeder task feed mỗi 2s
     if (WDT.enable(15000)) {
@@ -490,7 +491,6 @@ void taskNtpUpdate(void* pvParams) {
 // ── Watchdog Feeder Task ──
 void taskWdtFeed(void* pvParams) {
     (void)pvParams;
-    int time = 0;
 
     while (1) {
         if (ESP.getFreeHeap() < 4096) {
@@ -500,12 +500,6 @@ void taskWdtFeed(void* pvParams) {
         }
         WDT.feed();
 
-        if (millis() - time >= 3600000UL) {
-            time = millis();
-            logManager.addPumpTime(3600000UL);
-        }
-
-
         vTaskDelay(pdMS_TO_TICKS(2000));
     }
 }
@@ -513,6 +507,7 @@ void taskWdtFeed(void* pvParams) {
 // ── Energy Log Task ──
 void taskEnergyLog(void* pvParams) {
     (void)pvParams;
+    uint32_t time = 0;
 
     while (1) {
         if (logManager.isTimeSynced()) {
@@ -547,6 +542,11 @@ void taskEnergyLog(void* pvParams) {
                 currentSensor.resetHourlyEnergy();
                 s_hourRefMillis = millis();
             }
+        }
+
+        if (millis() - time >= 3600000UL) {
+            time = millis();
+            logManager.addPumpTime(3600000UL);
         }
 
         vTaskDelay(pdMS_TO_TICKS(1000));
