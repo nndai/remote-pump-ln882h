@@ -1,5 +1,6 @@
 #include "CommandHandler.h"
 #include <mbedtls/base64.h>
+#include "BuildInfo.h"
 
 extern "C" {
 struct ln_list_s {
@@ -258,7 +259,7 @@ void CommandHandler::_cmdGetStatus(const String& source, const JsonDocument& pay
     _sendResponse(source, resp);
 
     if (payload["stream"].is<bool>() && payload["stream"].as<bool>()) {
-        startStream(STREAM_STATUS, source, 120000UL);
+        startStream(STREAM_STATUS, source, STREAM_DURATION_MS);
     }
 }
 
@@ -796,6 +797,8 @@ void CommandHandler::_cmdGetSystemInfo(const String& source, const JsonDocument&
         sys["cpuFreq"] = ESP.getCpuFreqMHz();
         sys["sdkVersion"] = ESP.getSdkVersion();
         sys["firmwareVersion"] = FIRMWARE_VERSION;
+        sys["buildTime"] = buildStr();
+        sys["buildUnixTime"] = buildUnixTime();
         sys["uptime"] = millis() / 1000;
 
         time_t raw = _log->getEpoch();
@@ -889,7 +892,7 @@ void CommandHandler::_cmdGetSystemInfo(const String& source, const JsonDocument&
     _sendResponse(source, resp);
 
     if (payload["stream"].is<bool>() && payload["stream"].as<bool>()) {
-        startStream(STREAM_SYSINFO, source, 120000UL);
+        startStream(STREAM_SYSINFO, source, STREAM_DURATION_MS);
     }
 }
 

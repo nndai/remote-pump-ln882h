@@ -87,3 +87,7 @@ desktop.ini
 *.bak
 *.swp
 *~
+
+# Generated build timestamp header
+/include/build_time.h
+

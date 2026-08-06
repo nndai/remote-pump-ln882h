@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <functional>
+#include <Config.h>
 
 class OTAManager {
 public:
@@ -22,8 +23,6 @@ public:
     int getTotal() const { return _total; }
     bool canRollback();
     bool rollback();
-
-    static constexpr size_t OTA_CHUNK_SIZE = 1400;
 
 private:
     bool _running;

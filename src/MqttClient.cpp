@@ -5,7 +5,7 @@ static MqttClient* s_instance = nullptr;
 
 MqttClient::MqttClient()
     : _mqtt(_wifiClient)
-    , _port(1883)
+    , _port(DEFAULT_MQTT_PORT)
     , _lastReconnect(0)
 {
     _mqtt.setBufferSize(MQTT_BUFFER_SIZE);
@@ -23,7 +23,7 @@ bool MqttClient::begin(const char* server, uint16_t port,
     _pass = pass ? pass : "";
     _clientId = clientId ? clientId : DEVICE_NAME;
     _topic = topic ? topic : "pump";
-    _useTls = (port != 1883);
+    _useTls = (port != DEFAULT_MQTT_PORT);
     _mqtt.setServer(server, port);
     return true;
 }
@@ -79,7 +79,7 @@ bool MqttClient::subscribe(const String& topic) {
 
 bool MqttClient::loop() {
     if (!_mqtt.connected()) {
-        if (millis() - _lastReconnect > 5000) return connect();
+        if (millis() - _lastReconnect > MQTT_RECONNECT_INTERVAL_MS) return connect();
         return false;
     }
 
