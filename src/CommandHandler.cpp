@@ -259,7 +259,7 @@ void CommandHandler::_cmdGetStatus(const String& source, const JsonDocument& pay
     _sendResponse(source, resp);
 
     if (payload["stream"].is<bool>() && payload["stream"].as<bool>()) {
-        startStream(STREAM_STATUS, source, 120000UL);
+        startStream(STREAM_STATUS, source, STREAM_DURATION_MS);
     }
 }
 
@@ -892,7 +892,7 @@ void CommandHandler::_cmdGetSystemInfo(const String& source, const JsonDocument&
     _sendResponse(source, resp);
 
     if (payload["stream"].is<bool>() && payload["stream"].as<bool>()) {
-        startStream(STREAM_SYSINFO, source, 120000UL);
+        startStream(STREAM_SYSINFO, source, STREAM_DURATION_MS);
     }
 }
 

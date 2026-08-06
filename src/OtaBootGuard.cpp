@@ -27,12 +27,12 @@
  * nút -> reset trạng thái về IDLE.
  *
  * Không dùng WDT trong guard (cơ chế cứu hộ thủ công: nếu treo thì cắt nguồn
- * và làm lại). LED (PIN_LED, active HIGH) báo trạng thái:
+ * và làm lại). LED (PIN_LED, active LOW) báo trạng thái:
  *   - boot 1 - đã lưu PREPARING        : LED sáng 300ms
  *   - boot 2 - đang giữ nút (>=5s)      : LED sáng liên tục
  *   - boot 2 - chờ nhả nút (trong 5s)   : LED nháy nhanh 100ms
  *   - chế độ OTA - chờ kết nối WiFi     : LED sáng liên tục (tối đa 60s)
- *   - chế độ OTA - đang tải/ghi firmware: LED đảo mỗi vòng lặp tải
+ *   - chế độ OTA - đang tải/ghi firmware: LED đảo mỗi 50ms
  *   - flash OK                          : LED sáng 1s rồi reboot
  *   - thất bại                          : LED tắt rồi reboot
  *
@@ -91,7 +91,8 @@ static uint32_t otaNowMs() {
 }
 
 // ── Nút boot: busy-wait sampling (chưa có scheduler nên không dùng
-//    vTaskDelay/delay()). Trả true nếu nút đang nhấn (mức LOW). ────────────
+//    vTaskDelay/delay()). Trả true nếu nút đang nhấn (active LOW theo
+//    BUTTON_ACTIVE_LOW). ─────────────────────────────────────────────────────
 
 static bool otaButtonInitDone = false;
 static uint32_t otaBtnBase;
@@ -114,10 +115,10 @@ static bool otaButtonPressed() {
         ln_block_delayms(5);
         otaButtonInitDone = true;
     }
-    return hal_gpio_pin_input_read(otaBtnBase, otaBtnPin) == LOW;
+    return hal_gpio_pin_input_read(otaBtnBase, otaBtnPin) == (BUTTON_ACTIVE_LOW ? LOW : HIGH);
 }
 
-// ── LED: hal_gpio trực tiếp (chạy trước mọi ctor) — PIN_LED active HIGH ────
+// ── LED: hal_gpio trực tiếp (chạy trước mọi ctor) — PIN_LED active LOW ─────
 
 static bool otaLedInitDone = false;
 static uint32_t otaLedBase;
@@ -138,7 +139,7 @@ static void otaLedSet(bool on) {
         hal_gpio_init(otaLedBase, &gpio);
         otaLedInitDone = true;
     }
-    if (on) hal_gpio_pin_set(otaLedBase, otaLedPin);
+    if (on == !LED_ACTIVE_LOW) hal_gpio_pin_set(otaLedBase, otaLedPin);
     else hal_gpio_pin_reset(otaLedBase, otaLedPin);
 }
 
@@ -194,7 +195,7 @@ static bool otaDownloadAndFlash(const char* url) {
     int total = http.getSize();
     // UPDATE_SIZE_UNKNOWN -> Update.begin gọi lt_ota_begin size=0: không cần
     // Content-Length, UF2 tự mang kích thước trong mỗi block
-    if (total <= 0) total = UPDATE_SIZE_UNKNOWN;
+    if (total <= 0) total = 1024 * 1024; // giả sử 1MB nếu không có Content-Length
     
     if (!Update.begin(total, U_FLASH)) {
         LT_EM(OTA, "Manual OTA: Update.begin failed: %s", Update.errorString());
@@ -203,13 +204,17 @@ static bool otaDownloadAndFlash(const char* url) {
     }
 
     WiFiClient* stream = http.getStreamPtr();
-    uint8_t buf[1400];
+    uint8_t buf[OTA_CHUNK_SIZE];
     size_t written = 0;
     bool ledOn = false;
+    uint32_t lastLed = millis();
 
     while (http.connected() && written < (size_t)total) {
-        ledOn = !ledOn;
-        otaLedSet(ledOn);
+        if (millis() - lastLed >= 50) {
+            ledOn = !ledOn;
+            otaLedSet(ledOn);
+            lastLed = millis();
+        }
 
         size_t avail = stream->available();
         if (avail > 0) {
@@ -240,7 +245,7 @@ static void otaUploadTask(void* pv) {
 
     uint32_t t0 = millis();
     otaLedSet(true);
-    while (WiFi.status() != WL_CONNECTED && millis() - t0 < 60000) {
+    while (WiFi.status() != WL_CONNECTED && millis() - t0 < OTA_WIFI_TIMEOUT_MS) {
         vTaskDelay(pdMS_TO_TICKS(100));
     }
     if (WiFi.status() != WL_CONNECTED) {
@@ -249,6 +254,7 @@ static void otaUploadTask(void* pv) {
         goto finish;
     }
 
+    vTaskDelay(pdMS_TO_TICKS(3000));
     {
         LT_IM(OTA, "Manual OTA: WiFi connected, downloading %s", DEFAULT_OTA_URL);
         bool ok = otaDownloadAndFlash(DEFAULT_OTA_URL);
@@ -265,7 +271,7 @@ finish:
 // ── Cướp quá trình boot: tạo task OTA và khởi động scheduler ───────────────
 
 static void otaEnterMode() {
-    xTaskCreate(otaUploadTask, "otaUpload", 8192, NULL, TASK_NETWORK_PRIO + 1, NULL);
+    xTaskCreate(otaUploadTask, "otaUpload", OTA_TASK_STACK, NULL, TASK_NETWORK_PRIO + 1, NULL);
     vTaskStartScheduler();
     for (;;) {} // never reached
 }

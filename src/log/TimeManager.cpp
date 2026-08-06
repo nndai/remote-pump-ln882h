@@ -1,9 +1,10 @@
 #include "TimeManager.h"
+#include <Config.h>
 
 TimeManager::TimeManager() {}
 
 void TimeManager::setTime(unsigned long epoch) {
-    if (epoch > 1700000000) {
+    if (epoch > EPOCH_VALID_MIN) {
         _epochMillis = millis();
         _epoch = epoch;
         _timeSynced = true;

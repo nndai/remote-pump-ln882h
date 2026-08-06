@@ -1,4 +1,5 @@
 #include "CurrentSensor.h"
+#include <Config.h>
 
 volatile uint32_t CurrentSensor::s_cfPulses = 0;
 volatile uint32_t CurrentSensor::s_cf1Pulses = 0;
@@ -52,7 +53,7 @@ void CurrentSensor::loop() {
 
     unsigned long now = millis();
     unsigned long elapsed = now - _lastLoopMs;
-    if (elapsed < 800) return;
+    if (elapsed < CURRENT_MIN_INTERVAL_MS) return;
     _lastLoopMs = now;
 
     uint32_t curCf = s_cfPulses;

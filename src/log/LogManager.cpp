@@ -1,5 +1,6 @@
 #include "LogManager.h"
 #include <LittleFS.h>
+#include <Config.h>
 
 LogManager::LogManager()
     : _sysLog(_time)
@@ -38,7 +39,7 @@ void LogManager::maintenance() {
 }
 
 void LogManager::setTime(unsigned long epoch) {
-    if (epoch > 1700000000) {
+    if (epoch > EPOCH_VALID_MIN) {
         bool firstSync = !_time.isTimeSynced();
         _time.setTime(epoch);
         if (firstSync) {

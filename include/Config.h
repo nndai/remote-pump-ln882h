@@ -18,7 +18,7 @@
 #define PIN_NTC_ADC        PIN_PA04  // PA04  - NTC 10k thermistor (ADC-capable pin)
 #define PIN_RELAY          PIN_PB03  // PB03  - Relay control
 #define PIN_TRIAC_GATE     PIN_PA08  // PA08  - TRIAC gate control
-#define PIN_LED            PIN_PA06  // PA06  - Status LED (active HIGH)
+#define PIN_LED            PIN_PA06  // PA06  - Status LED (active LOW)
 #define PIN_BUTTON         PIN_PA07  // PA07  - Push button (active LOW, pull-up)
 
 // ── Network ──
@@ -41,6 +41,7 @@
 #define DEFAULT_DEBUG_NETMASK   {255, 255, 255, 0}
 
 // ── BL0937 Defaults ──
+#define CURRENT_MIN_INTERVAL_MS   500     // interval tối thiểu giữa 2 lần tính dòng điện
 
 // ── Default Current Thresholds (mA) ──
 #define DEFAULT_THRESH_OFF          100     // <100mA  = not running
@@ -54,6 +55,7 @@
 
 // ── Default Pump Mode ──
 #define DEFAULT_PUMP_MODE          true
+#define PUMP_CRITICAL_PERCENT      125     // dòng >= 125% ngưỡng running -> critical
 
 // ── NTC Thermistor (10k + 10k series) ──
 #define NTC_SERIES_RESISTOR     10000.0f    // 10k series resistor
@@ -63,16 +65,28 @@
 #define NTC_ADC_MAX             4095.0f     // 12-bit ADC
 #define NTC_VREF                3.3f        // Reference voltage
 
+// ── System / RTOS ──
+#define WDT_TIMEOUT_MS            15000   // watchdog timeout
+#define WDT_FEED_INTERVAL_MS      2000    // task wdtFeed feed mỗi 2s
+#define HEAP_CRITICAL_BYTES       4096    // heap dưới mức này -> restart
+#define STREAM_DURATION_MS        120000  // thời lượng stream status/sysinfo (WS/MQTT)
+#define EPOCH_VALID_MIN           1700000000  // epoch >= mức này mới coi là đã đồng bộ giờ
+
 // ── Button ──
-#define BUTTON_LONG_PRESS_MS      10000    // 10s hold = enter AP mode
-#define BUTTON_CONFIRM_TIMEOUT_MS 3000     // 3s to confirm pump start
+#define BUTTON_ACTIVE_LOW          true    // nút nhấn xuống mức LOW (pull-up)
+#define BUTTON_LONG_PRESS_MS      5000    // giữ 5s để mở chuỗi thao tác; giữ thêm 5s -> bước kế
+#define BUTTON_CONFIRM_TIMEOUT_MS 3000    // nhả nút trong 3s để xác nhận bước đã chọn
 #define BUTTON_DEBOUNCE_MS        50
 
+// ── LED ──
+#define LED_ACTIVE_LOW             true    // LED sáng ở mức LOW (active low)
+
 // ── MQTT ──
-#define DEFAULT_MQTT_PORT        1883
-#define DEFAULT_MQTT_TOPIC       "pump"
-#define MQTT_BUFFER_SIZE         5000
-#define MQTT_SOCKET_TIMEOUT_SEC  7
+#define DEFAULT_MQTT_PORT          1883
+#define DEFAULT_MQTT_TOPIC         "pump"
+#define MQTT_BUFFER_SIZE           5000
+#define MQTT_SOCKET_TIMEOUT_SEC    7
+#define MQTT_RECONNECT_INTERVAL_MS 5000  // khoảng cách giữa 2 lần thử kết nối lại
 
 
 // ── OTA khẩn cấp bằng tay (OtaBootGuard, xem src/OtaBootGuard.cpp) ──
@@ -82,7 +96,10 @@
 #define OTA_BTN_KEY               "ota_btn"
 #define OTA_BTN_HOLD_MS           5000    // giữ nút liên tục ít nhất 5s...
 #define OTA_BTN_RELEASE_MS        5000    // ...rồi nhả trong 5s kế tiếp -> vào OTA
-#define DEFAULT_OTA_URL           "http://192.168.137.1:8000/firmware.uf2"
+#define DEFAULT_OTA_URL           "http://192.168.137.1:8090/firmware.uf2"
+#define OTA_WIFI_TIMEOUT_MS       60000   // chờ kết nối WiFi tối đa 60s
+#define OTA_TASK_STACK            8192    // stack cho task otaUpload
+#define OTA_CHUNK_SIZE            1400    // buffer đọc HTTP khi tải firmware
 
 
 // ── FreeRTOS task config ──

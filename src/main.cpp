@@ -43,14 +43,6 @@ NTPClient ntpClient(ntpUdp, 7 * 3600);
 OTAManager otaManager;
 CommandHandler commandHandler;
 
-// ── Task handles ──
-TaskHandle_t* taskWifiConnectHandle = nullptr;
-TaskHandle_t* taskWsLoopHandle = nullptr;
-TaskHandle_t* taskMqttLoopHandle = nullptr;
-TaskHandle_t* taskNtpUpdateHandle = nullptr;
-TaskHandle_t* taskSensorHandle = nullptr;
-TaskHandle_t* taskButtonHandle = nullptr;
-TaskHandle_t* taskLedHandle = nullptr;
 
 // ── Runtime connection mode ──
 ConnMode g_connMode = ConnMode::AP_WS;
@@ -112,7 +104,7 @@ void setup() {
     LT_IM(SYS, "FW Version: %s (build %s, %u)", FIRMWARE_VERSION, buildStr(), (unsigned)buildUnixTime());
 
     //Watchdog: 15s timeout, feeder task feed mỗi 2s
-    if (WDT.enable(15000)) {
+    if (WDT.enable(WDT_TIMEOUT_MS)) {
         xTaskCreate(taskWdtFeed, "wdtFeed", 512, NULL, tskIDLE_PRIORITY + 1, NULL);
         LT_IM(SYS, "Watchdog enabled, 15s timeout");
     }
@@ -219,8 +211,8 @@ void setup() {
 
     tempSensor.begin(PIN_NTC_ADC);
     relayController.begin(PIN_RELAY, PIN_TRIAC_GATE);
-    ledController.begin(PIN_LED, true);
-    button.setup(PIN_BUTTON, INPUT_PULLUP, true);
+    ledController.begin(PIN_LED, LED_ACTIVE_LOW);
+    button.setup(PIN_BUTTON, INPUT_PULLUP, BUTTON_ACTIVE_LOW);
 
     pumpController.begin(&relayController, cfg.pumpMode);
     pumpController.setThresholds(cfg.threshOff, cfg.threshNoWater, cfg.threshRunning, cfg.threshOverload);
@@ -241,15 +233,15 @@ void setup() {
     switch (cfg.connMode) {
     case ConnMode::AP_WS:
         setupAP_WS(cfg);
-        xTaskCreate(taskWsLoop, "ws", TASK_NETWORK_STACK, NULL, TASK_NETWORK_PRIO, taskWsLoopHandle);
+        xTaskCreate(taskWsLoop, "ws", TASK_NETWORK_STACK, NULL, TASK_NETWORK_PRIO, NULL);
         break;
     case ConnMode::STA_MQTT:
         setupSTA_MQTT(cfg);
-        xTaskCreate(taskWifiConnect, "wifiConn", TASK_NETWORK_STACK, NULL, TASK_NETWORK_PRIO, taskWifiConnectHandle);
+        xTaskCreate(taskWifiConnect, "wifiConn", TASK_NETWORK_STACK, NULL, TASK_NETWORK_PRIO, NULL);
         break;
     case ConnMode::DEBUG_WS:
         setupDEBUG_WS(cfg);
-        xTaskCreate(taskWifiConnect, "wifiConn", TASK_NETWORK_STACK, NULL, TASK_NETWORK_PRIO, taskWifiConnectHandle);
+        xTaskCreate(taskWifiConnect, "wifiConn", TASK_NETWORK_STACK, NULL, TASK_NETWORK_PRIO, NULL);
         break;
     }
 
@@ -265,8 +257,8 @@ void setup() {
     }
 
     xTaskCreate(sensorTask, "sensor", TASK_SENSOR_STACK, NULL, TASK_SENSOR_PRIO, NULL);
-    xTaskCreate(buttonTask, "button", TASK_BUTTON_STACK, NULL, TASK_BUTTON_PRIO, taskButtonHandle);
-    xTaskCreate(ledTask, "led", TASK_LED_STACK, NULL, TASK_LED_PRIO, taskLedHandle);
+    xTaskCreate(buttonTask, "button", TASK_BUTTON_STACK, NULL, TASK_BUTTON_PRIO, NULL);
+    xTaskCreate(ledTask, "led", TASK_LED_STACK, NULL, TASK_LED_PRIO, NULL);
     xTaskCreate(taskEnergyLog, "energyLog", 1000, NULL, tskIDLE_PRIORITY + 1, NULL);
     xTaskCreate(taskStreamSender, "stream", 1000, NULL, tskIDLE_PRIORITY + 2, NULL);
 
@@ -397,11 +389,11 @@ void taskWifiConnect(void* pvParams) {
 
         switch (g_connMode) {
         case ConnMode::DEBUG_WS:
-            xTaskCreate(taskWsLoop, "ws", TASK_NETWORK_STACK, NULL, TASK_NETWORK_PRIO, taskWsLoopHandle);
+            xTaskCreate(taskWsLoop, "ws", TASK_NETWORK_STACK, NULL, TASK_NETWORK_PRIO, NULL);
             break;
         case ConnMode::STA_MQTT:
-            xTaskCreate(taskMqttLoop, "mqtt", TASK_NETWORK_STACK, NULL, TASK_NETWORK_PRIO, taskMqttLoopHandle);
-            xTaskCreate(taskNtpUpdate, "ntp", TASK_NTPCLIENT_STACK, NULL, TASK_NETWORK_PRIO, taskNtpUpdateHandle);
+            xTaskCreate(taskMqttLoop, "mqtt", TASK_NETWORK_STACK, NULL, TASK_NETWORK_PRIO, NULL);
+            xTaskCreate(taskNtpUpdate, "ntp", TASK_NTPCLIENT_STACK, NULL, TASK_NETWORK_PRIO, NULL);
             break;
         default:
             break;
@@ -493,14 +485,14 @@ void taskWdtFeed(void* pvParams) {
     (void)pvParams;
 
     while (1) {
-        if (ESP.getFreeHeap() < 4096) {
+        if (ESP.getFreeHeap() < HEAP_CRITICAL_BYTES) {
             LT_IM(SYS, "Heap critically low (%u bytes), restarting!", ESP.getFreeHeap());
             ESP.restart();
             while (1) {}
         }
         WDT.feed();
 
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(WDT_FEED_INTERVAL_MS));
     }
 }
 
@@ -591,7 +583,7 @@ void buttonTask(void* pvParams) {
     button.attachClick(onButtonClick);
     button.attachDoubleClick(onButtonDoubleClick);
     button.attachLongPressStart(onButtonLongPressStart);
-    button.setPressMs(5000);
+    button.setPressMs(BUTTON_LONG_PRESS_MS);
 
     while (1) {
         button.tick();
@@ -690,11 +682,11 @@ static void onButtonLongPressStart() {
     ledController.blink(100);
     while (digitalRead(PIN_BUTTON) == LOW) {
         vTaskDelay(pdMS_TO_TICKS(100));
-        if (millis() - startTime >= 5000) {
+        if (millis() - startTime >= BUTTON_LONG_PRESS_MS) {
             ledController.off();
             startTime = millis();
 
-            while (millis() - startTime < 3000) {
+            while (millis() - startTime < BUTTON_CONFIRM_TIMEOUT_MS) {
                 vTaskDelay(pdMS_TO_TICKS(100));
                 if (digitalRead(PIN_BUTTON) == HIGH) {
                     break;

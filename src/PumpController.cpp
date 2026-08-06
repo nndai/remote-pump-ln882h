@@ -78,7 +78,7 @@ void PumpController::update(float currentAmps) {
             }
             _dryStart = 0;
             _criticalStart = 0;
-        } else if (currentMa >= _threshRunning * 125 / 100) {
+        } else if (currentMa >= _threshRunning * PUMP_CRITICAL_PERCENT / 100) {
             _dryStart = 0;
             _overloadStart = 0;
             if (_criticalStart == 0) {
